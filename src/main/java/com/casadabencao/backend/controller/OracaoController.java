@@ -4,6 +4,8 @@ import com.casadabencao.backend.model.Oracao;
 import com.casadabencao.backend.service.OracaoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import java.security.Principal;
+
 
 import java.util.List;
 
@@ -16,9 +18,13 @@ public class OracaoController {
     private OracaoService oracaoService;
 
     @GetMapping
-    public List<Oracao> getAll() {
-        return oracaoService.findAll();
+    public List<Oracao> getAll(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String category
+    ) {
+        return oracaoService.findAllFiltered(search, category);
     }
+
 
     @GetMapping("/{id}")
     public Oracao getById(@PathVariable Long id) {
@@ -26,14 +32,17 @@ public class OracaoController {
     }
 
     @PostMapping
-    public Oracao create(@RequestBody Oracao oracao) {
-        return oracaoService.save(oracao);
+    public Oracao create(@RequestBody Oracao oracao, Principal principal) {
+        String email = principal.getName(); // usa o email como identificador
+        return oracaoService.saveWithUser(oracao, email);
     }
 
     @PutMapping("/{id}")
-    public Oracao update(@PathVariable Long id, @RequestBody Oracao novaOracao) {
-        return oracaoService.update(id, novaOracao);
+    public Oracao update(@PathVariable Long id, @RequestBody Oracao novaOracao, Principal principal) {
+        String email = principal.getName();
+        return oracaoService.update(id, novaOracao, email);
     }
+
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
@@ -43,7 +52,7 @@ public class OracaoController {
     // Lista apenas pedidos de oração ainda não respondidos
     @GetMapping("/pedidos")
     public List<Oracao> getPedidosNaoRespondidos() {
-        return oracaoService.findByApproved(false);
+        return oracaoService.findNaoRespondidas();
     }
 
     // Marca um pedido de oração como respondido
@@ -51,5 +60,12 @@ public class OracaoController {
     public Oracao marcarComoRespondido(@PathVariable Long id) {
         return oracaoService.marcarComoRespondido(id);
     }
+
+    @GetMapping("/minhas")
+    public List<Oracao> getMinhasOracoes(Principal principal) {
+        String email = principal.getName();
+        return oracaoService.findByUsuarioEmail(email);
+    }
+
 
 }

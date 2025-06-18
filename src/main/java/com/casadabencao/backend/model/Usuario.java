@@ -1,5 +1,6 @@
 package com.casadabencao.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import com.casadabencao.backend.model.Ministerio;
@@ -50,9 +51,13 @@ public class Usuario {
             joinColumns = @JoinColumn(name = "usuario_id"),
             inverseJoinColumns = @JoinColumn(name = "ministerio_id")
     )
+    @JsonIgnoreProperties({"leaders", "viceLeaders", "ministries"})
     private List<Ministerio> ministries = new ArrayList<>();
 
     @Column(length = 512)
     private String profileImageUrl;
+
+    @Column(columnDefinition = "TEXT")
+    private String biography;
 
 }

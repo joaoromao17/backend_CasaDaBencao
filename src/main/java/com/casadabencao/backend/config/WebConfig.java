@@ -16,6 +16,19 @@ public class WebConfig implements WebMvcConfigurer {
 
         registry.addResourceHandler("/uploads/pdfs/**")
                 .addResourceLocations("file:uploads/pdfs/");
+
+        registry.addResourceHandler("/uploads/ministerios/**")
+                .addResourceLocations("file:uploads/ministerios/");
+
+        registry.addResourceHandler("/uploads/contribuicoes/**")
+                .addResourceLocations("file:uploads/contribuicoes/");
+
+        registry.addResourceHandler("/uploads/eventos/**")
+                .addResourceLocations("file:uploads/eventos/");
+
+        // ✅ Novo mapeamento para avisos
+        registry.addResourceHandler("/uploads/avisos/**")
+                .addResourceLocations("file:D:/IgrejaCasadaBencao/backend/uploads/avisos/");
     }
 
 

@@ -1,9 +1,13 @@
 package com.casadabencao.backend.controller;
 
+import com.casadabencao.backend.dto.EventoDto;
 import com.casadabencao.backend.model.Evento;
 import com.casadabencao.backend.service.EventoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
 @RestController
@@ -26,18 +30,31 @@ public class EventoController {
     }
 
     @GetMapping("/{id}")
-    public Evento getById(@PathVariable Long id) {
-        return eventoService.findById(id).orElse(null);
+    public ResponseEntity<Evento> getById(@PathVariable Long id) {
+        return eventoService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
+
     @PostMapping
-    public Evento create(@RequestBody Evento evento) {
-        return eventoService.save(evento);
+    public ResponseEntity<Evento> create(
+            @RequestPart("evento") EventoDto eventoDto,
+            @RequestPart(value = "image", required = false) MultipartFile image
+    ) {
+        Evento salvo = eventoService.saveFromDto(eventoDto, image);
+        return ResponseEntity.ok(salvo);
     }
 
     @PutMapping("/{id}")
-    public Evento update(@PathVariable Long id, @RequestBody Evento eventoAtualizado) {
-        return eventoService.update(id, eventoAtualizado);
+    public ResponseEntity<Evento> update(
+            @PathVariable Long id,
+            @RequestPart("evento") EventoDto eventoDto,
+            @RequestPart(value = "image", required = false) MultipartFile image
+    ) {
+        Evento atualizado = eventoService.updateFromDto(id, eventoDto, image);
+        if (atualizado == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(atualizado);
     }
 
     @DeleteMapping("/{id}")

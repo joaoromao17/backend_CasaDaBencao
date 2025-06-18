@@ -5,6 +5,7 @@ import com.casadabencao.backend.service.ContribuicaoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -47,4 +48,13 @@ public class ContribuicaoController {
     public Contribuicao adicionarValor(@PathVariable Long id, @RequestParam BigDecimal valor) {
         return service.adicionarContribuicao(id, valor);
     }
+
+    @PostMapping("/{id}/imagem")
+    public Contribuicao uploadImagem(
+            @PathVariable Long id,
+            @RequestParam("imagem") MultipartFile imagem
+    ) {
+        return service.salvarImagem(id, imagem);
+    }
+
 }

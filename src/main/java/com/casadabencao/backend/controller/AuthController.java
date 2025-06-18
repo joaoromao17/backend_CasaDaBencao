@@ -32,11 +32,11 @@ public class AuthController {
         }
 
         return jwtUtil.generateToken(
+                usuario.getId(), // ✅ agora inclui o ID
                 usuario.getEmail(),
                 usuario.getRoles().stream()
                         .map(Enum::name)
                         .toList()
         );
-
     }
 }

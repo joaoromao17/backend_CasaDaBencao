@@ -25,7 +25,6 @@ public class VersiculoController {
         return versiculoService.getVersiculoDoDia();
     }
 
-    // Opcional: endpoints de listagem e adição manual
     @GetMapping
     public List<Versiculo> listarTodos() {
         return versiculoRepository.findAll();
@@ -34,5 +33,21 @@ public class VersiculoController {
     @PostMapping
     public Versiculo criar(@RequestBody Versiculo versiculo) {
         return versiculoRepository.save(versiculo);
+    }
+
+    @PutMapping("/{id}")
+    public Versiculo atualizar(@PathVariable Long id, @RequestBody Versiculo versiculoAtualizado) {
+        return versiculoRepository.findById(id)
+                .map(versiculo -> {
+                    versiculo.setVerse(versiculoAtualizado.getVerse());
+                    versiculo.setReference(versiculoAtualizado.getReference());
+                    return versiculoRepository.save(versiculo);
+                })
+                .orElseThrow(() -> new RuntimeException("Versículo não encontrado com id: " + id));
+    }
+
+    @DeleteMapping("/{id}")
+    public void deletar(@PathVariable Long id) {
+        versiculoRepository.deleteById(id);
     }
 }

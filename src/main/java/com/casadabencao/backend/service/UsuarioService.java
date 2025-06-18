@@ -1,5 +1,6 @@
 package com.casadabencao.backend.service;
 
+import com.casadabencao.backend.dto.UsuarioDto;
 import com.casadabencao.backend.model.Ministerio;
 import com.casadabencao.backend.model.PasswordResetToken;
 import com.casadabencao.backend.model.Role;
@@ -8,18 +9,21 @@ import com.casadabencao.backend.repository.MinisterioRepository;
 import com.casadabencao.backend.repository.PasswordResetTokenRepository;
 import com.casadabencao.backend.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
 
+import org.springframework.data.domain.Pageable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.Month;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -63,14 +67,14 @@ public class UsuarioService {
         // Define cargos iniciais com base no campo "member"
         if (usuario.getRoles() == null || usuario.getRoles().isEmpty()) {
             if (Boolean.TRUE.equals(usuario.getMember())) {
-                usuario.setRoles(List.of(Role.MEMBRO));
+                usuario.setRoles(List.of(Role.ROLE_MEMBRO));
             } else {
-                usuario.setRoles(List.of(Role.VISITANTE));
+                usuario.setRoles(List.of(Role.ROLE_VISITANTE));
             }
         }
 
         // Valida se for LIDER, precisa de ministérios
-        if (usuario.getRoles().contains(Role.LIDER) &&
+        if (usuario.getRoles().contains(Role.ROLE_LIDER) &&
                 (usuario.getMinistries() == null || usuario.getMinistries().isEmpty())) {
             throw new IllegalArgumentException("Usuários com cargo de LIDER devem estar associados a pelo menos um ministério.");
         }
@@ -89,33 +93,60 @@ public class UsuarioService {
 
     public Usuario update(Long id, Usuario updated) {
         return usuarioRepository.findById(id).map(usuario -> {
-            usuario.setName(updated.getName());
-            usuario.setPhone(updated.getPhone());
-            Optional<Usuario> outroUsuario = usuarioRepository.findByEmail(updated.getEmail());
-            if (outroUsuario.isPresent() && !outroUsuario.get().getId().equals(usuario.getId())) {
-                throw new IllegalArgumentException("Este email já está em uso.");
-            }
-            usuario.setEmail(updated.getEmail());
-            usuario.setMember(updated.getMember());
-            usuario.setAddress(updated.getAddress());
-            usuario.setBirthDate(updated.getBirthDate());
-            usuario.setMaritalStatus(updated.getMaritalStatus());
-            usuario.setBaptized(updated.getBaptized());
-            usuario.setAcceptedTerms(updated.getAcceptedTerms());
-            usuario.setProfileImageUrl(updated.getProfileImageUrl());
 
-            if (updated.getPassword() != null && !updated.getPassword().isEmpty()
-                    && !passwordEncoder.matches(updated.getPassword(), usuario.getPassword())) {
-                usuario.setPassword(passwordEncoder.encode(updated.getPassword()));
+            if (updated.getName() != null) {
+                usuario.setName(updated.getName());
+            }
+
+            if (updated.getPhone() != null) {
+                usuario.setPhone(updated.getPhone());
+            }
+
+            if (updated.getEmail() != null) {
+                Optional<Usuario> outroUsuario = usuarioRepository.findByEmail(updated.getEmail());
+                if (outroUsuario.isPresent() && !outroUsuario.get().getId().equals(usuario.getId())) {
+                    throw new IllegalArgumentException("Este email já está em uso.");
+                }
+                usuario.setEmail(updated.getEmail());
+            }
+
+            if (updated.getMember() != null) {
+                usuario.setMember(updated.getMember());
+            }
+
+            if (updated.getAddress() != null) {
+                usuario.setAddress(updated.getAddress());
+            }
+
+            if (updated.getBirthDate() != null) {
+                usuario.setBirthDate(updated.getBirthDate());
+            }
+
+            if (updated.getMaritalStatus() != null) {
+                usuario.setMaritalStatus(updated.getMaritalStatus());
+            }
+
+            if (updated.getBaptized() != null) {
+                usuario.setBaptized(updated.getBaptized());
+            }
+
+            if (updated.getAcceptedTerms() != null) {
+                usuario.setAcceptedTerms(updated.getAcceptedTerms());
+            }
+
+            if (updated.getProfileImageUrl() != null) {
+                usuario.setProfileImageUrl(updated.getProfileImageUrl());
+            }
+
+            if (updated.getPassword() != null && !updated.getPassword().isBlank()) {
+                // só atualiza se for diferente da atual
+                if (!passwordEncoder.matches(updated.getPassword(), usuario.getPassword())) {
+                    usuario.setPassword(passwordEncoder.encode(updated.getPassword()));
+                }
             }
 
             if (updated.getRoles() != null) {
                 usuario.setRoles(updated.getRoles());
-
-                if (updated.getRoles().contains(Role.LIDER) &&
-                        (updated.getMinistries() == null || updated.getMinistries().isEmpty())) {
-                    throw new IllegalArgumentException("Usuários com cargo de LIDER devem estar associados a pelo menos um ministério.");
-                }
             }
 
             if (updated.getMinistries() != null) {
@@ -126,9 +157,14 @@ public class UsuarioService {
                 usuario.setMinistries(ministries);
             }
 
+            if (updated.getBiography() != null) {
+                usuario.setBiography(updated.getBiography());
+            }
+
             return usuarioRepository.save(usuario);
         }).orElse(null);
     }
+
 
     public void delete(Long id) {
         usuarioRepository.deleteById(id);
@@ -183,6 +219,43 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
 
         tokenRepository.delete(resetToken); // consome o token
+    }
+
+    public List<Usuario> findAllById(List<Long> ids) {
+        return usuarioRepository.findAllById(ids);
+    }
+
+    public List<Usuario> findByRole(Role role) {
+        return usuarioRepository.findByRolesContaining(role);
+    }
+
+    public Page<Usuario> findMembros(Pageable pageable) {
+        return usuarioRepository.findByRoleOrdered(Role.ROLE_MEMBRO, pageable);
+    }
+
+    public List<Usuario> findAniversariantesDoMes() {
+        Month mesAtual = LocalDate.now().getMonth();
+        return usuarioRepository.findAll().stream()
+                .filter(u -> {
+                    try {
+                        LocalDate birth = LocalDate.parse(u.getBirthDate());
+                        return birth.getMonth().equals(mesAtual);
+                    } catch (Exception e) {
+                        return false;
+                    }
+                })
+                .sorted(Comparator.comparing(u -> {
+                    LocalDate birth = LocalDate.parse(u.getBirthDate());
+                    return birth.withYear(LocalDate.now().getYear());
+                }))
+                .collect(Collectors.toList());
+    }
+
+    public Page<Usuario> findMembros(String search, Pageable pageable) {
+        if (search == null || search.trim().isEmpty()) {
+            return usuarioRepository.findByRoleOrdered(Role.ROLE_MEMBRO, pageable);
+        }
+        return usuarioRepository.findByRoleAndNameContainingIgnoreCase(Role.ROLE_MEMBRO, search.trim(), pageable);
     }
 
 

@@ -17,6 +17,7 @@ public class Versiculo {
 
     private String verse;
 
+    @Column(columnDefinition = "TEXT")
     private String reference;
 
     // Construtor personalizado usado no seeder (sem ID)

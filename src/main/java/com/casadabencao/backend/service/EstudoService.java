@@ -14,19 +14,23 @@ public class EstudoService {
     @Autowired
     private EstudoRepository estudoRepository;
 
-    public List<Estudo> listarTodos() {
+    public List<Estudo> findAll() {
         return estudoRepository.findAll();
     }
 
-    public Optional<Estudo> buscarPorId(Long id) {
+    public Optional<Estudo> findById(Long id) {
         return estudoRepository.findById(id);
     }
 
-    public Estudo salvar(Estudo estudo) {
+    public Estudo save(Estudo estudo) {
         return estudoRepository.save(estudo);
     }
 
-    public void deletar(Long id) {
+    public void deleteById(Long id) {
         estudoRepository.deleteById(id);
+    }
+
+    public boolean existsById(Long id) {
+        return estudoRepository.existsById(id);
     }
 }

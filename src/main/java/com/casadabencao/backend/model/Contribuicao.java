@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @Entity
 @Getter
@@ -38,18 +39,15 @@ public class Contribuicao {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate startDate;
 
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate endDate;
 
     private String createdBy;
 
-    private String shortDescription;
-
     private String pixKey;
-
-    @Column(columnDefinition = "TEXT")
-    private String fullDescription;
 
     public enum Status {
         ATIVA,
