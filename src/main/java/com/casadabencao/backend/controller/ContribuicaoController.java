@@ -12,7 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/contribuicoes")
-@CrossOrigin(origins = "http://localhost:3000") // Ajuste para produção conforme necessário
 public class ContribuicaoController {
 
     @Autowired

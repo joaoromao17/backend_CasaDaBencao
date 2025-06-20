@@ -11,7 +11,6 @@ import java.util.Random;
 
 @RestController
 @RequestMapping("/api/versiculos")
-@CrossOrigin(origins = "http://localhost:3000")
 public class VersiculoController {
 
     @Autowired

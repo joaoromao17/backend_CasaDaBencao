@@ -19,7 +19,7 @@ public class AdminSeeder {
     CommandLineRunner initAdmin(
             UsuarioRepository usuarioRepository,
             MinisterioRepository ministerioRepository,
-            PasswordEncoder passwordEncoder // Lembre-se de ter esse bean configurado
+            PasswordEncoder passwordEncoder
     ) {
         return args -> {
             String adminEmail = "icbcasadabencao610@gmail.com";
@@ -41,11 +41,9 @@ public class AdminSeeder {
                 admin.setPassword(passwordEncoder.encode("admin123")); // senha criptografada
                 admin.setMinistries(todosMinisterios);
                 admin.setProfileImageUrl("/uploads/profiles/profile_admin.jpg");
+                admin.setBiography("ADMINISTRADOR DO SITE");
 
                 usuarioRepository.save(admin);
-                System.out.println("👑 Conta de administrador criada com sucesso.");
-            } else {
-                System.out.println("✅ Conta de administrador já existe.");
             }
         };
     }

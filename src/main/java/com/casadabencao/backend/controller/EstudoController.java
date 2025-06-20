@@ -22,7 +22,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/estudos")
-@CrossOrigin(origins = "http://localhost:3000")
 public class EstudoController {
 
     @Autowired

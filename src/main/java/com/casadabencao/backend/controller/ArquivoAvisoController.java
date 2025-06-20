@@ -12,7 +12,6 @@ import java.nio.file.*;
 
 @RestController
 @RequestMapping("/api/avisos/arquivos")
-@CrossOrigin(origins = "http://localhost:3000")
 public class ArquivoAvisoController {
 
     @Value("${upload.aviso.path}")

@@ -1,6 +1,5 @@
 package com.casadabencao.backend.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -26,16 +25,14 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/uploads/eventos/**")
                 .addResourceLocations("file:uploads/eventos/");
 
-        // ✅ Novo mapeamento para avisos
         registry.addResourceHandler("/uploads/avisos/**")
-                .addResourceLocations("file:D:/IgrejaCasadaBencao/backend/uploads/avisos/");
+                .addResourceLocations("file:uploads/avisos/");
     }
-
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000")
+                .allowedOrigins("http://localhost:3000", "https://casa-da-ben.vercel.app")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
