@@ -14,7 +14,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -33,24 +32,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        List<SimpleGrantedAuthority> authorities = null;
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
 
             try {
-                Claims claims = Jwts.parser()
-                        .setSigningKey(jwtUtil.getSecret().getBytes())
+                Claims claims = Jwts.parserBuilder()
+                        .setSigningKey(jwtUtil.getSecret().getBytes()) // 🔁 Substituir por getSigningKey()
+                        .build()
                         .parseClaimsJws(token)
                         .getBody();
 
                 String email = claims.getSubject();
                 List<String> roles = claims.get("roles", List.class);
-                authorities = roles.stream()
+                List<SimpleGrantedAuthority> authorities = roles.stream()
                         .map(SimpleGrantedAuthority::new)
                         .toList();
 
                 if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(email, null, authorities);
 
@@ -60,7 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
 
             } catch (Exception e) {
-                // Token inválido
+                System.out.println("❌ Erro ao validar token JWT: " + e.getMessage());
             }
         }
         filterChain.doFilter(request, response);
