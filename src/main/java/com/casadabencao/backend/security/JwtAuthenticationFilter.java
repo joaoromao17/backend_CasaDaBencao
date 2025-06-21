@@ -36,11 +36,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
 
             try {
-                Claims claims = Jwts.parserBuilder()
-                        .setSigningKey(jwtUtil.getSecret().getBytes()) // 🔁 Substituir por getSigningKey()
-                        .build()
-                        .parseClaimsJws(token)
-                        .getBody();
+Claims claims = Jwts.parserBuilder()
+        .setSigningKey(jwtUtil.getSigningKey()) // ✅ Correto agora
+        .build()
+        .parseClaimsJws(token)
+        .getBody();
+
 
                 String email = claims.getSubject();
                 List<String> roles = claims.get("roles", List.class);
