@@ -18,10 +18,9 @@ public class JwtUtil {
 
     private final long EXPIRATION_TIME = 86400000; // 1 dia
 
-    private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
-        // Se quiser usar uma base64 string, use: Decoders.BASE64.decode(secret)
-    }
+public SecretKey getSigningKey() {
+    return Keys.hmacShaKeyFor(secret.getBytes());
+}
 
     public String generateToken(Long userId, String email, List<String> roles) {
         return Jwts.builder()
