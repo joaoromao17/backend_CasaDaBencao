@@ -15,36 +15,41 @@ import java.util.List;
 @Configuration
 public class AdminSeeder {
 
-    @Bean
-    CommandLineRunner initAdmin(
-            UsuarioRepository usuarioRepository,
-            MinisterioRepository ministerioRepository,
-            PasswordEncoder passwordEncoder
-    ) {
-        return args -> {
-            String adminEmail = "icbcasadabencao610@gmail.com";
+@Bean
+CommandLineRunner initAdmin(
+        UsuarioRepository usuarioRepository,
+        MinisterioRepository ministerioRepository,
+        PasswordEncoder passwordEncoder
+) {
+    return args -> {
+        String adminEmail = "icbcasadabencao610@gmail.com";
 
-            if (usuarioRepository.findByEmail(adminEmail).isEmpty()) {
-                List<Ministerio> todosMinisterios = ministerioRepository.findAll();
+        if (usuarioRepository.findByEmail(adminEmail).isEmpty()) {
+            System.out.println("👀 Criando admin...");
 
-                Usuario admin = new Usuario();
-                admin.setName("Administrador Casa Da Benção");
-                admin.setEmail(adminEmail);
-                admin.setPhone("(61) 98614-9855");
-                admin.setMember(true);
-                admin.setRoles(List.of(Role. ROLE_ADMIN));
-                admin.setAddress("Qs610");
-                admin.setBirthDate("01/01/2000");
-                admin.setMaritalStatus("casado(a)");
-                admin.setBaptized(true);
-                admin.setAcceptedTerms(true);
-                admin.setPassword(passwordEncoder.encode("admin123")); // senha criptografada
-                admin.setMinistries(todosMinisterios);
-                admin.setProfileImageUrl("/uploads/profiles/profile_admin.jpg");
-                admin.setBiography("ADMINISTRADOR DO SITE");
+            List<Ministerio> todosMinisterios = ministerioRepository.findAll(); // pode ser vazio
 
-                usuarioRepository.save(admin);
-            }
-        };
-    }
+            Usuario admin = new Usuario();
+            admin.setName("Administrador Casa Da Benção");
+            admin.setEmail(adminEmail);
+            admin.setPhone("(61) 98614-9855");
+            admin.setMember(true);
+            admin.setRoles(List.of(Role.ROLE_ADMIN)); // <-- cuidado com o espaço! Era "Role. ROLE_ADMIN"
+            admin.setAddress("Qs610");
+            admin.setBirthDate("01/01/2000");
+            admin.setMaritalStatus("casado(a)");
+            admin.setBaptized(true);
+            admin.setAcceptedTerms(true);
+            admin.setPassword(passwordEncoder.encode("admin123"));
+            admin.setMinistries(todosMinisterios); // mesmo que esteja vazio
+            admin.setProfileImageUrl("/uploads/profiles/profile_admin.jpg");
+            admin.setBiography("ADMINISTRADOR DO SITE");
+
+            usuarioRepository.save(admin);
+            System.out.println("✅ Admin criado com sucesso.");
+        } else {
+            System.out.println("⚠️ Admin já existe.");
+        }
+    };
+}
 }
