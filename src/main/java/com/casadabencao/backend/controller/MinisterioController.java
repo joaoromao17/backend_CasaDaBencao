@@ -30,6 +30,9 @@ public class MinisterioController {
     @Autowired
     private UsuarioService usuarioService;
 
+@Autowired
+private CloudinaryService cloudinaryService;
+
     // ⚠️ Substituído para retornar DTOs
     @GetMapping
     public ResponseEntity<List<MinisterioDto>> getAll() {
@@ -58,22 +61,13 @@ public class MinisterioController {
             ministerio.setMeetingDay(meetingDay);
 
             // Upload da imagem
-            if (image != null && !image.isEmpty() && image.getContentType().startsWith("image/")) {
-                Path uploadPath = Paths.get("uploads/ministerios");
-                if (!Files.exists(uploadPath)) {
-                    Files.createDirectories(uploadPath);
-                }
+if (image != null && !image.isEmpty() && image.getContentType().startsWith("image/")) {
+    String imageUrl = cloudinaryService.uploadFile(image, "ministerios");
+    ministerio.setImageUrl(imageUrl);
+} else {
+    ministerio.setImageUrl("https://res.cloudinary.com/seu-cloud-name/image/upload/v12345678/ministerio_default.jpg");
+}
 
-                String filename = UUID.randomUUID() + "_" + image.getOriginalFilename();
-                Path filePath = uploadPath.resolve(filename);
-                Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-                String imageUrl = "/images/ministerios/" + filename;
-                ministerio.setImageUrl(imageUrl);
-            } else {
-                // Imagem padrão caso nenhuma seja enviada
-                ministerio.setImageUrl("/uploads/ministerios/ministerio_default.jpg");
-            }
 
             // Atividades
             if (activities != null) {
@@ -150,4 +144,3 @@ public class MinisterioController {
     }
 
 }
-
