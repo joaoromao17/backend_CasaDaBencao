@@ -22,6 +22,10 @@ public class EventoService {
     @Autowired
     private StorageService storageService;
 
+@Autowired
+private CloudinaryService cloudinaryService;
+
+
     public List<Evento> findAll() {
         return eventoRepository.findAll();
     }
@@ -44,10 +48,10 @@ public class EventoService {
         evento.setLocation(dto.getLocation());
         evento.setCategory(dto.getCategory());
 
-        if (image != null && !image.isEmpty()) {
-            String imageUrl = storageService.saveImage(image, "eventos");
-            evento.setImageUrl(imageUrl);
-        }
+if (image != null && !image.isEmpty()) {
+    String imageUrl = cloudinaryService.uploadFile(image, "eventos");
+    evento.setImageUrl(imageUrl);
+}
 
         return eventoRepository.save(evento);
     }
@@ -61,10 +65,10 @@ public class EventoService {
             evento.setLocation(dto.getLocation());
             evento.setCategory(dto.getCategory());
 
-            if (image != null && !image.isEmpty()) {
-                String imageUrl = storageService.saveImage(image, "eventos");
-                evento.setImageUrl(imageUrl);
-            }
+if (image != null && !image.isEmpty()) {
+    String imageUrl = cloudinaryService.uploadFile(image, "eventos");
+    evento.setImageUrl(imageUrl);
+}
 
             return eventoRepository.save(evento);
         }).orElse(null);
