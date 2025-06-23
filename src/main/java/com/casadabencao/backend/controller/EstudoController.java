@@ -27,6 +27,9 @@ public class EstudoController {
     @Autowired
     private EstudoService estudoService;
 
+@Autowired
+private CloudinaryService cloudinaryService;
+
     private final String uploadDir = "uploads/pdfs/";
 
     // GET - Lista todos os estudos
@@ -71,23 +74,14 @@ public class EstudoController {
         estudo.setDate(LocalDate.parse(date));
         estudo.setCategory(category);
 
-        if (pdfFile != null && !pdfFile.isEmpty()) {
-            try {
-                String filename = UUID.randomUUID() + "_" + StringUtils.cleanPath(pdfFile.getOriginalFilename());
-                Path uploadPath = Paths.get(uploadDir);
-
-                if (!Files.exists(uploadPath)) {
-                    Files.createDirectories(uploadPath);
-                }
-
-                Path filePath = uploadPath.resolve(filename);
-                Files.copy(pdfFile.getInputStream(), filePath);
-
-                estudo.setPdfUrl("http://localhost:8080/" + uploadDir + filename);
-            } catch (IOException e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-            }
-        }
+if (pdfFile != null && !pdfFile.isEmpty()) {
+    try {
+        String url = cloudinaryService.uploadFile(pdfFile, "estudos");
+        estudo.setPdfUrl(url);
+    } catch (IOException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
 
         Estudo salvo = estudoService.save(estudo);
         return ResponseEntity.ok(salvo);
@@ -118,24 +112,16 @@ public class EstudoController {
 
         try {
             // Gera um nome único para o arquivo
-            String filename = UUID.randomUUID() + "_" + StringUtils.cleanPath(pdfFile.getOriginalFilename());
-            Path uploadPath = Paths.get(uploadDir);
-
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-            Path filePath = uploadPath.resolve(filename);
-            Files.copy(pdfFile.getInputStream(), filePath);
+String url = cloudinaryService.uploadFile(pdfFile, "estudos");
 
             // Cria o estudo e salva no banco
-            Estudo estudo = new Estudo();
-            estudo.setTitle(title);
-            estudo.setDescription(description);
-            estudo.setAuthor(author);
-            estudo.setDate(LocalDate.parse(date));
-            estudo.setCategory(category);
-            estudo.setPdfUrl("http://localhost:8080/" + uploadDir + filename);
+Estudo estudo = new Estudo();
+estudo.setTitle(title);
+estudo.setDescription(description);
+estudo.setAuthor(author);
+estudo.setDate(LocalDate.parse(date));
+estudo.setCategory(category);
+estudo.setPdfUrl(url);
 
             Estudo salvo = estudoService.save(estudo);
             return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
