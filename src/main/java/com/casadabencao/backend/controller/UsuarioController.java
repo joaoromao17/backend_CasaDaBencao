@@ -35,6 +35,9 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
+    @Autowired
+private CloudinaryService cloudinaryService;
+
     @GetMapping
     public List<Usuario> getAll() {
         return usuarioService.findAll();
@@ -77,39 +80,27 @@ public class UsuarioController {
         return ResponseEntity.ok(usuario);
     }
 
-    @PutMapping("/profile/image")
-    public ResponseEntity<?> uploadProfileImage(@RequestParam("file") MultipartFile file, Principal principal) {
-        try {
-            String email = principal.getName(); // ou extraia do token, se usar JWT
-            Usuario usuario = usuarioRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-            // Cria pasta se não existir
-            Path uploadPath = Paths.get("uploads/profiles");
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
+@PutMapping("/profile/image")
+public ResponseEntity<?> uploadProfileImage(@RequestParam("file") MultipartFile file, Principal principal) {
+    try {
+        String email = principal.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-            Optional<String> contentType = Optional.ofNullable(file.getContentType());
-            if (file.isEmpty() || contentType.isEmpty() || !contentType.get().startsWith("image/")) {
-                return ResponseEntity.badRequest().body("Arquivo inválido.");
-            }
-
-            // Gera nome único
-            String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            Path filePath = uploadPath.resolve(filename);
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            // Atualiza o campo no banco
-            String imagePath = "/uploads/profiles/" + filename;
-            usuario.setProfileImageUrl(imagePath);
-            usuarioRepository.save(usuario);
-
-            return ResponseEntity.ok().build();
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao salvar imagem");
+        if (file.isEmpty() || !file.getContentType().startsWith("image/")) {
+            return ResponseEntity.badRequest().body("Arquivo inválido.");
         }
+
+        String imageUrl = cloudinaryService.uploadFile(file, "usuarios");
+        usuario.setProfileImageUrl(imageUrl);
+        usuarioRepository.save(usuario);
+
+        return ResponseEntity.ok().body(imageUrl);
+    } catch (IOException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao salvar imagem");
     }
+}
 
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestBody Usuario updated, Principal principal) {
