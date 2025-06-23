@@ -1,4 +1,3 @@
-// ArquivoAvisoController.java
 package com.casadabencao.backend.controller;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -14,23 +13,16 @@ import java.nio.file.*;
 @RequestMapping("/api/avisos/arquivos")
 public class ArquivoAvisoController {
 
-    @Value("${upload.aviso.path}")
-    private String uploadDir;
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
-    @PostMapping
-    public ResponseEntity<String> uploadArquivo(@RequestParam("file") MultipartFile file) throws IOException {
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body("Arquivo vazio.");
-        }
-
-        String filename = System.currentTimeMillis() + "_" + StringUtils.cleanPath(file.getOriginalFilename());
-        Path destino = Paths.get(uploadDir).resolve(filename);
-
-        Files.createDirectories(destino.getParent());
-        Files.copy(file.getInputStream(), destino, StandardCopyOption.REPLACE_EXISTING);
-
-        // Caminho acessível pelo frontend (ajuste conforme seu setup de estáticos se necessário)
-        String urlPublica = "/uploads/avisos/" + filename;
-        return ResponseEntity.ok(urlPublica);
+@PostMapping
+public ResponseEntity<String> uploadArquivo(@RequestParam("file") MultipartFile file) throws IOException {
+    if (file.isEmpty()) {
+        return ResponseEntity.badRequest().body("Arquivo vazio.");
     }
+
+    String urlPublica = cloudinaryService.uploadFile(file, "avisos");
+    return ResponseEntity.ok(urlPublica);
+}
 }
