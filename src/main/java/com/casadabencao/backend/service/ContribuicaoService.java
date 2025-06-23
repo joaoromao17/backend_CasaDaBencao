@@ -64,7 +64,7 @@ public class ContribuicaoService {
 
 public Contribuicao salvarImagemUrl(Long id, String imageUrl) {
     Contribuicao c = findById(id).orElseThrow();
-    c.setImagemUrl(imageUrl);
+    c.setImageUrl(imageUrl); 
     return repository.save(c);
 }
 }
