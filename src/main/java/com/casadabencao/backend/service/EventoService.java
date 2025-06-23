@@ -9,7 +9,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.casadabencao.backend.service.CloudinaryService;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -24,9 +23,8 @@ public class EventoService {
     @Autowired
     private StorageService storageService;
 
-@Autowired
-private CloudinaryService cloudinaryService;
-
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     public List<Evento> findAll() {
         return eventoRepository.findAll();
@@ -41,7 +39,7 @@ private CloudinaryService cloudinaryService;
         return eventoRepository.findById(id);
     }
 
-    public Evento saveFromDto(EventoDto dto, MultipartFile image) {
+    public Evento saveFromDto(EventoDto dto, MultipartFile image) throws IOException {
         Evento evento = new Evento();
         evento.setTitle(dto.getTitle());
         evento.setDescription(dto.getDescription());
@@ -50,15 +48,15 @@ private CloudinaryService cloudinaryService;
         evento.setLocation(dto.getLocation());
         evento.setCategory(dto.getCategory());
 
-if (image != null && !image.isEmpty()) {
-    String imageUrl = cloudinaryService.uploadFile(image, "eventos");
-    evento.setImageUrl(imageUrl);
-}
+        if (image != null && !image.isEmpty()) {
+            String imageUrl = cloudinaryService.uploadFile(image, "eventos");
+            evento.setImageUrl(imageUrl);
+        }
 
         return eventoRepository.save(evento);
     }
 
-    public Evento updateFromDto(Long id, EventoDto dto, MultipartFile image) {
+    public Evento updateFromDto(Long id, EventoDto dto, MultipartFile image) throws IOException {
         return eventoRepository.findById(id).map(evento -> {
             evento.setTitle(dto.getTitle());
             evento.setDescription(dto.getDescription());
@@ -67,10 +65,14 @@ if (image != null && !image.isEmpty()) {
             evento.setLocation(dto.getLocation());
             evento.setCategory(dto.getCategory());
 
-if (image != null && !image.isEmpty()) {
-    String imageUrl = cloudinaryService.uploadFile(image, "eventos");
-    evento.setImageUrl(imageUrl);
-}
+            try {
+                if (image != null && !image.isEmpty()) {
+                    String imageUrl = cloudinaryService.uploadFile(image, "eventos");
+                    evento.setImageUrl(imageUrl);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Erro ao fazer upload da imagem para o Cloudinary", e);
+            }
 
             return eventoRepository.save(evento);
         }).orElse(null);
