@@ -62,26 +62,9 @@ public class ContribuicaoService {
         }).orElseThrow(() -> new RuntimeException("Contribuição não encontrada com id " + id));
     }
 
-    public Contribuicao salvarImagem(Long id, MultipartFile imagem) {
-        return repository.findById(id).map(c -> {
-            String filename = System.currentTimeMillis() + "_" + StringUtils.cleanPath(imagem.getOriginalFilename());
-            String pastaDestino = "uploads/contribuicoes";
-            File pasta = new File(pastaDestino);
-            if (!pasta.exists()) pasta.mkdirs();
-
-            if (!imagem.getContentType().startsWith("image/")) {
-                throw new RuntimeException("Arquivo enviado não é uma imagem.");
-            }
-
-
-            Path caminho = Paths.get(pastaDestino, filename);
-            try {
-                Files.copy(imagem.getInputStream(), caminho, StandardCopyOption.REPLACE_EXISTING);
-                c.setImageUrl("/uploads/contribuicoes/" + filename);
-                return repository.save(c);
-            } catch (IOException e) {
-                throw new RuntimeException("Erro ao salvar imagem", e);
-            }
-        }).orElseThrow(() -> new RuntimeException("Contribuição não encontrada com id " + id));
-    }
+public Contribuicao salvarImagemUrl(Long id, String imageUrl) {
+    Contribuicao c = findById(id).orElseThrow();
+    c.setImagemUrl(imageUrl);
+    return repository.save(c);
+}
 }
