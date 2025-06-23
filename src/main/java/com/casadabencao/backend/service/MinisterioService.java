@@ -1,139 +1,146 @@
-package com.casadabencao.backend.service;
+package com.casadabencao.backend.controller;
 
 import com.casadabencao.backend.dto.MinisterioDto;
 import com.casadabencao.backend.model.Ministerio;
 import com.casadabencao.backend.model.Usuario;
-import com.casadabencao.backend.repository.MinisterioRepository;
+import com.casadabencao.backend.service.MinisterioService;
+import com.casadabencao.backend.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Collections;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
-@Service
-public class MinisterioService {
+@RestController
+@RequestMapping("/api/ministerios")
+public class MinisterioController {
 
     @Autowired
-    private MinisterioRepository ministerioRepository;
+    private MinisterioService ministerioService;
 
     @Autowired
     private UsuarioService usuarioService;
 
-    @Autowired
-    private StorageService storageService;
+@Autowired
+private CloudinaryService cloudinaryService;
 
-
-    public List<Ministerio> findAll() {
-        return ministerioRepository.findAll();
+    // ⚠️ Substituído para retornar DTOs
+    @GetMapping
+    public ResponseEntity<List<MinisterioDto>> getAll() {
+        return ResponseEntity.ok(ministerioService.getAllWithLeaders());
     }
 
-    public Optional<Ministerio> findById(Long id) {
-        return ministerioRepository.findById(id);
+    @GetMapping("/{id}")
+    public Ministerio getById(@PathVariable Long id) {
+        return ministerioService.findById(id).orElse(null);
     }
 
-    public Ministerio save(Ministerio ministerio) {
-        return ministerioRepository.save(ministerio);
-    }
+    @PostMapping
+    public ResponseEntity<?> createMinistry(
+            @RequestParam String name,
+            @RequestParam String description,
+            @RequestParam String meetingDay,
+            @RequestParam(required = false) MultipartFile image,
+            @RequestParam(required = false) List<Long> leaderIds,
+            @RequestParam(required = false) List<Long> viceLeaders,
+            @RequestParam(required = false) List<String> activities
+    ) {
+        try {
+            Ministerio ministerio = new Ministerio();
+            ministerio.setName(name);
+            ministerio.setDescription(description);
+            ministerio.setMeetingDay(meetingDay);
 
-    public Ministerio update(Long id, Ministerio atualizado) {
-        return ministerioRepository.findById(id).map(ministerio -> {
-            ministerio.setName(atualizado.getName());
-            ministerio.setDescription(atualizado.getDescription());
-            ministerio.setLeaders(atualizado.getLeaders());
-            ministerio.setViceLeaders(atualizado.getViceLeaders());
-            ministerio.setImageUrl(atualizado.getImageUrl());
-            ministerio.setMeetingDay(atualizado.getMeetingDay());
-            ministerio.setAtividades(atualizado.getAtividades());
-            ministerio.setWall(atualizado.getWall());
-            return ministerioRepository.save(ministerio);
-        }).orElse(null);
-    }
+            // Upload da imagem
+if (image != null && !image.isEmpty() && image.getContentType().startsWith("image/")) {
+    String imageUrl = cloudinaryService.uploadFile(image, "ministerios");
+    ministerio.setImageUrl(imageUrl);
+} else {
+    ministerio.setImageUrl("https://res.cloudinary.com/seu-cloud-name/image/upload/v12345678/ministerio_default.jpg");
+}
 
-    public void delete(Long id) {
-        ministerioRepository.deleteById(id);
-    }
 
-    public List<MinisterioDto> getAllWithLeaders() {
-        return ministerioRepository.findAll().stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-    }
+            // Atividades
+            if (activities != null) {
+                List<String> atividadesFiltradas = activities.stream()
+                        .filter(a -> a != null && !a.trim().isEmpty())
+                        .toList();
+                ministerio.setAtividades(atividadesFiltradas);
+            }
 
-    private MinisterioDto convertToDto(Ministerio ministerio) {
-        MinisterioDto dto = new MinisterioDto();
-        dto.setId(ministerio.getId());
-        dto.setName(ministerio.getName());
-        dto.setDescription(ministerio.getDescription());
-        dto.setImageUrl(ministerio.getImageUrl());
-        dto.setWall(ministerio.getWall());
-        dto.setMeetingDay(ministerio.getMeetingDay());
+            // Buscar líderes
+            if (leaderIds != null) {
+                List<Usuario> leaders = leaderIds.stream()
+                        .map(usuarioService::findById)
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .toList();
+                ministerio.setLeaders(leaders);
+            }
 
-        dto.setLeaderIds(Optional.ofNullable(ministerio.getLeaders())
-                .orElse(Collections.emptyList())
-                .stream()
-                .map(Usuario::getId)
-                .collect(Collectors.toList()));
+            // Buscar vice-líderes
+            if (viceLeaders != null) {
+                List<Usuario> vices = viceLeaders.stream()
+                        .map(usuarioService::findById)
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .toList();
+                ministerio.setViceLeaders(vices);
+            }
 
-        dto.setLeaderNames(Optional.ofNullable(ministerio.getLeaders())
-                .orElse(Collections.emptyList())
-                .stream()
-                .map(Usuario::getName)
-                .collect(Collectors.toList()));
+            Ministerio salvo = ministerioService.save(ministerio);
+            return ResponseEntity.ok(salvo);
 
-        dto.setViceLeaderIds(Optional.ofNullable(ministerio.getViceLeaders())
-                .orElse(Collections.emptyList())
-                .stream()
-                .map(Usuario::getId)
-                .collect(Collectors.toList()));
-
-        dto.setViceLeaderNames(Optional.ofNullable(ministerio.getViceLeaders())
-                .orElse(Collections.emptyList())
-                .stream()
-                .map(Usuario::getName)
-                .collect(Collectors.toList()));
-
-        dto.setActivities(Optional.ofNullable(ministerio.getAtividades())
-                .orElse(Collections.emptyList()));
-
-        return dto;
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro: " + e.getMessage());
+        }
     }
 
 
-    public List<Usuario> findAllById(List<Long> ids) {
-        return usuarioService.findAllById(ids);
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Long id) {
+        ministerioService.delete(id);
     }
 
+    // Você pode manter esse como está, ou até mesmo remover pois está duplicado com o de cima
+    @GetMapping("/resumo")
+    public ResponseEntity<List<MinisterioDto>> getMinisteriosComResumo() {
+        return ResponseEntity.ok(ministerioService.getAllWithLeaders());
+    }
 
-    public Ministerio updateFromDto(Long id, MinisterioDto dto, MultipartFile image) {
-        Ministerio ministerio = findById(id)
-                .orElseThrow(() -> new RuntimeException("Ministério não encontrado"));
+    @PostMapping("/{id}")
+    public ResponseEntity<?> update(
+            @PathVariable Long id,
+            @RequestPart("dto") MinisterioDto dto,
+            @RequestPart(value = "image", required = false) MultipartFile image,
+            Principal principal
+    ) {
+        Usuario usuario = usuarioService.findByEmail(principal.getName());
 
-        if (dto.getName() != null) ministerio.setName(dto.getName());
-        if (dto.getDescription() != null) ministerio.setDescription(dto.getDescription());
-        if (dto.getMeetingDay() != null) ministerio.setMeetingDay(dto.getMeetingDay());
+        Ministerio ministerio = ministerioService.findById(id).orElse(null);
+        if (ministerio == null) return ResponseEntity.notFound().build();
 
-        if (dto.getLeaderIds() != null) {
-            List<Usuario> leaders = usuarioService.findAllById(dto.getLeaderIds());
-            ministerio.setLeaders(leaders);
+        boolean isLider = ministerio.getLeaders().contains(usuario);
+        boolean isVice = ministerio.getViceLeaders().contains(usuario);
+        boolean isAdmin = usuario.getRoles().stream().anyMatch(role -> role.name().equals("ROLE_ADMIN"));
+        boolean isPastor = usuario.getRoles().stream().anyMatch(role -> role.name().equals("ROLE_PASTOR"));
+
+        if (!(isLider || isVice || isAdmin || isPastor)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        if (dto.getViceLeaderIds() != null) {
-            List<Usuario> viceLeaders = usuarioService.findAllById(dto.getViceLeaderIds());
-            ministerio.setViceLeaders(viceLeaders);
-        }
-
-        if (dto.getActivities() != null) {
-            ministerio.setAtividades(dto.getActivities());
-        }
-
-        if (image != null && !image.isEmpty()) {
-            String imageUrl = storageService.saveImage(image, "ministerios");
-            ministerio.setImageUrl(imageUrl);
-        }
-
-        return ministerioRepository.save(ministerio);
+        Ministerio atualizadoFinal = ministerioService.updateFromDto(id, dto, image);
+        return ResponseEntity.ok(atualizadoFinal);
     }
+
 }
