@@ -26,10 +26,11 @@ public class CloudinaryService {
         ));
     }
 
-    public String uploadFile(MultipartFile file, String folder) throws IOException {
-        Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
-                "folder", folder
-        ));
-        return (String) uploadResult.get("secure_url");
-    }
+public String uploadFile(MultipartFile file, String folder) throws IOException {
+    Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
+        "folder", folder,
+        "resource_type", "auto" // Isso detecta automaticamente se é imagem, vídeo ou raw (PDF)
+    ));
+    return (String) uploadResult.get("secure_url");
+}
 }
