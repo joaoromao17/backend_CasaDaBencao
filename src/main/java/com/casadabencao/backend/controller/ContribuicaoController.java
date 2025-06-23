@@ -17,6 +17,9 @@ public class ContribuicaoController {
     @Autowired
     private ContribuicaoService service;
 
+    @Autowired
+private CloudinaryService cloudinaryService;
+
     @GetMapping
     public List<Contribuicao> listarTodas() {
         return service.findAll();
@@ -48,12 +51,13 @@ public class ContribuicaoController {
         return service.adicionarContribuicao(id, valor);
     }
 
-    @PostMapping("/{id}/imagem")
-    public Contribuicao uploadImagem(
-            @PathVariable Long id,
-            @RequestParam("imagem") MultipartFile imagem
-    ) {
-        return service.salvarImagem(id, imagem);
-    }
+@PostMapping("/{id}/imagem")
+public Contribuicao uploadImagem(
+        @PathVariable Long id,
+        @RequestParam("imagem") MultipartFile imagem
+) throws IOException {
+    String url = cloudinaryService.uploadFile(imagem, "contribuicoes");
+    return service.salvarImagemUrl(id, url); 
+}
 
 }
