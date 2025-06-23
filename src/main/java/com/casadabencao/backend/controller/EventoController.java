@@ -39,25 +39,27 @@ public class EventoController {
     }
 
 
-    @PostMapping
-    public ResponseEntity<Evento> create(
-            @RequestPart("evento") EventoDto eventoDto,
-            @RequestPart(value = "image", required = false) MultipartFile image
-    ) {
-        Evento salvo = eventoService.saveFromDto(eventoDto, image);
-        return ResponseEntity.ok(salvo);
-    }
+@PostMapping
+public ResponseEntity<Evento> create(
+        @RequestPart("evento") EventoDto eventoDto,
+        @RequestPart(value = "image", required = false) MultipartFile image
+) throws IOException {
+    Evento salvo = eventoService.saveFromDto(eventoDto, image);
+    return ResponseEntity.ok(salvo);
+}
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Evento> update(
-            @PathVariable Long id,
-            @RequestPart("evento") EventoDto eventoDto,
-            @RequestPart(value = "image", required = false) MultipartFile image
-    ) {
-        Evento atualizado = eventoService.updateFromDto(id, eventoDto, image);
-        if (atualizado == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(atualizado);
-    }
+
+@PutMapping("/{id}")
+public ResponseEntity<Evento> update(
+        @PathVariable Long id,
+        @RequestPart("evento") EventoDto eventoDto,
+        @RequestPart(value = "image", required = false) MultipartFile image
+) throws IOException {
+    Evento atualizado = eventoService.updateFromDto(id, eventoDto, image);
+    if (atualizado == null) return ResponseEntity.notFound().build();
+    return ResponseEntity.ok(atualizado);
+}
+
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
