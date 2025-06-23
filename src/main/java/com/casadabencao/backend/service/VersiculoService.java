@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Random;
+import java.io.IOException;
 
 @Service
 public class VersiculoService {

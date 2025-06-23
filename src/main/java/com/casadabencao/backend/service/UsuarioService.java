@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
+import com.casadabencao.backend.service.CloudinaryService;
 
 import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
@@ -25,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.io.IOException;
 
 @Service
 public class UsuarioService {

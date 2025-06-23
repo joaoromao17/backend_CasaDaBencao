@@ -8,6 +8,7 @@ import java.security.Principal;
 
 
 import java.util.List;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/oracoes")

@@ -7,11 +7,13 @@ import com.casadabencao.backend.repository.MinisterioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import com.casadabencao.backend.service.CloudinaryService;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.io.IOException;
 
 @Service
 public class MinisterioService {
