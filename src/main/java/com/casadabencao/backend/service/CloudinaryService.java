@@ -31,7 +31,7 @@ public String uploadFile(MultipartFile file, String folder) throws IOException {
         "folder", folder,
         "resource_type", "raw",
         "use_filename", true,
-        "flags", "attachment:false"  // <- permite visualização inline
+        "attachment", false // <- Aqui está o segredo para visualização inline
     ));
     return (String) uploadResult.get("secure_url");
 }
