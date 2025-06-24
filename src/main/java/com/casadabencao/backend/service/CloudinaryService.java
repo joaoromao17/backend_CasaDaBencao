@@ -36,7 +36,10 @@ public class CloudinaryService {
                         "folder", folder,
                         "resource_type", isPdf ? "raw" : "auto",
                         "use_filename", true,
-                        "attachment", false
+                        "unique_filename", false,
+                        "public_id", originalFilename != null ? originalFilename.replaceAll("\\s+", "_").replaceAll("\\.pdf$", "") : null,
+                        "type", "upload",
+                        "content_type", isPdf ? "application/pdf" : null
                 )
         );
         return (String) uploadResult.get("secure_url");
