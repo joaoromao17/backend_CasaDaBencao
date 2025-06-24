@@ -26,13 +26,19 @@ public class CloudinaryService {
         ));
     }
 
-public String uploadFile(MultipartFile file, String folder) throws IOException {
-    Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
-        "folder", folder,
-        "resource_type", "auto", // <--- ESSENCIAL para PDF ser visualizável
-        "use_filename", true,
-        "attachment", false
-    ));
-    return (String) uploadResult.get("secure_url");
-}
+    public String uploadFile(MultipartFile file, String folder) throws IOException {
+        String originalFilename = file.getOriginalFilename();
+        boolean isPdf = originalFilename != null && originalFilename.toLowerCase().endsWith(".pdf");
+
+        Map uploadResult = cloudinary.uploader().upload(
+                file.getBytes(),
+                ObjectUtils.asMap(
+                        "folder", folder,
+                        "resource_type", isPdf ? "raw" : "auto",
+                        "use_filename", true,
+                        "attachment", false
+                )
+        );
+        return (String) uploadResult.get("secure_url");
+    }
 }
