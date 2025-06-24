@@ -29,7 +29,9 @@ public class CloudinaryService {
 public String uploadFile(MultipartFile file, String folder) throws IOException {
     Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
         "folder", folder,
-        "resource_type", "raw" // CORRETO PARA PDFs
+        "resource_type", "raw",
+        "use_filename", true,
+        "flags", "attachment:false"  // <- permite visualização inline
     ));
     return (String) uploadResult.get("secure_url");
 }
