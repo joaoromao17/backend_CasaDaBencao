@@ -31,6 +31,8 @@ import java.io.IOException;
 @Service
 public class UsuarioService {
 
+    private static final String DEFAULT_PROFILE_IMAGE = "https://res.cloudinary.com/dew6zhisa/image/upload/v1750872463/default-profile_crggbc.jpg";
+
     @Autowired
     private UsuarioRepository usuarioRepository;
 
@@ -57,41 +59,47 @@ public class UsuarioService {
         return usuarioRepository.findById(id);
     }
 
-    public Usuario save(Usuario usuario) {
-        if (usuarioRepository.existsByEmail(usuario.getEmail())) {
-            throw new IllegalArgumentException("Email já cadastrado");
-        }
-
-        if (usuario.getPassword() != null && !usuario.getPassword().isEmpty()) {
-            usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
-        }
-
-        // Define cargos iniciais com base no campo "member"
-        if (usuario.getRoles() == null || usuario.getRoles().isEmpty()) {
-            if (Boolean.TRUE.equals(usuario.getMember())) {
-                usuario.setRoles(List.of(Role.ROLE_MEMBRO));
-            } else {
-                usuario.setRoles(List.of(Role.ROLE_VISITANTE));
-            }
-        }
-
-        // Valida se for LIDER, precisa de ministérios
-        if (usuario.getRoles().contains(Role.ROLE_LIDER) &&
-                (usuario.getMinistries() == null || usuario.getMinistries().isEmpty())) {
-            throw new IllegalArgumentException("Usuários com cargo de LIDER devem estar associados a pelo menos um ministério.");
-        }
-
-        // Vincula ministérios existentes
-        if (usuario.getMinistries() != null) {
-            List<Ministerio> ministries = usuario.getMinistries().stream()
-                    .map(m -> ministerioRepository.findById(m.getId()).orElse(null))
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-            usuario.setMinistries(ministries);
-        }
-
-        return usuarioRepository.save(usuario);
+public Usuario save(Usuario usuario) {
+    if (usuarioRepository.existsByEmail(usuario.getEmail())) {
+        throw new IllegalArgumentException("Email já cadastrado");
     }
+
+    if (usuario.getPassword() != null && !usuario.getPassword().isEmpty()) {
+        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+    }
+
+    // Define cargos iniciais com base no campo "member"
+    if (usuario.getRoles() == null || usuario.getRoles().isEmpty()) {
+        if (Boolean.TRUE.equals(usuario.getMember())) {
+            usuario.setRoles(List.of(Role.ROLE_MEMBRO));
+        } else {
+            usuario.setRoles(List.of(Role.ROLE_VISITANTE));
+        }
+    }
+
+    // Valida se for LIDER, precisa de ministérios
+    if (usuario.getRoles().contains(Role.ROLE_LIDER) &&
+            (usuario.getMinistries() == null || usuario.getMinistries().isEmpty())) {
+        throw new IllegalArgumentException("Usuários com cargo de LIDER devem estar associados a pelo menos um ministério.");
+    }
+
+    // Vincula ministérios existentes
+    if (usuario.getMinistries() != null) {
+        List<Ministerio> ministries = usuario.getMinistries().stream()
+                .map(m -> ministerioRepository.findById(m.getId()).orElse(null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        usuario.setMinistries(ministries);
+    }
+
+    // Define imagem de perfil padrão
+    if (usuario.getProfileImageUrl() == null || usuario.getProfileImageUrl().isBlank()) {
+        usuario.setProfileImageUrl(DEFAULT_PROFILE_IMAGE);
+    }
+
+    return usuarioRepository.save(usuario);
+}
+
 
     public Usuario update(Long id, Usuario updated) {
         return usuarioRepository.findById(id).map(usuario -> {
