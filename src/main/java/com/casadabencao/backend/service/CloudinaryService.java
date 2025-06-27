@@ -37,7 +37,9 @@ public class CloudinaryService {
                         "resource_type", isPdf ? "raw" : "auto",
                         "use_filename", true,
                         "unique_filename", false,
-                        "public_id", originalFilename != null ? originalFilename.replaceAll("\\s+", "_").replaceAll("\\.pdf$", "") : null,
+                        "public_id", originalFilename != null && originalFilename.toLowerCase().endsWith(".pdf")
+    ? originalFilename.replaceAll("\\s+", "_")
+    : originalFilename,
                         "type", "upload",
                         "content_type", isPdf ? "application/pdf" : null
                 )
