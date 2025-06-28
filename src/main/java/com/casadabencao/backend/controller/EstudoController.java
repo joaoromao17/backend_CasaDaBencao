@@ -53,40 +53,45 @@ private CloudinaryService cloudinaryService;
         return estudoService.save(estudo);
     }
 
-    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Estudo> updateEstudo(
-            @PathVariable Long id,
-            @RequestParam("title") String title,
-            @RequestParam("description") String description,
-            @RequestParam("author") String author,
-            @RequestParam("date") String date,
-            @RequestParam("category") String category,
-            @RequestParam(value = "pdf", required = false) MultipartFile pdfFile) {
+@PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+public ResponseEntity<Estudo> updateEstudo(
+        @PathVariable Long id,
+        @RequestParam("title") String title,
+        @RequestParam("description") String description,
+        @RequestParam("author") String author,
+        @RequestParam("date") String date,
+        @RequestParam("category") String category,
+        @RequestParam(value = "pdf", required = false) MultipartFile pdfFile,
+        @RequestParam(value = "pdfUrl", required = false) String pdfUrl) {
 
-        Optional<Estudo> estudoOptional = estudoService.findById(id);
-        if (estudoOptional.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+    Optional<Estudo> estudoOptional = estudoService.findById(id);
+    if (estudoOptional.isEmpty()) {
+        return ResponseEntity.notFound().build();
+    }
 
-        Estudo estudo = estudoOptional.get();
-        estudo.setTitle(title);
-        estudo.setDescription(description);
-        estudo.setAuthor(author);
-        estudo.setDate(LocalDate.parse(date));
-        estudo.setCategory(category);
+    Estudo estudo = estudoOptional.get();
+    estudo.setTitle(title);
+    estudo.setDescription(description);
+    estudo.setAuthor(author);
+    estudo.setDate(LocalDate.parse(date));
+    estudo.setCategory(category);
 
-if (pdfFile != null && !pdfFile.isEmpty()) {
     try {
-        String url = cloudinaryService.uploadFile(pdfFile, "estudos");
-        estudo.setPdfUrl(url);
+        if (pdfUrl != null && !pdfUrl.isBlank()) {
+            estudo.setPdfUrl(pdfUrl);
+        } else if (pdfFile != null && !pdfFile.isEmpty()) {
+            String url = cloudinaryService.uploadFile(pdfFile, "estudos");
+            estudo.setPdfUrl(url);
+        }
+        // Caso nenhum dos dois seja enviado, mantém o PDF anterior
     } catch (IOException e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
+
+    Estudo salvo = estudoService.save(estudo);
+    return ResponseEntity.ok(salvo);
 }
 
-        Estudo salvo = estudoService.save(estudo);
-        return ResponseEntity.ok(salvo);
-    }
 
 
 
@@ -102,33 +107,37 @@ if (pdfFile != null && !pdfFile.isEmpty()) {
     }
 
     // POST - Upload de estudo com PDF
-    @PostMapping("/upload")
-    public ResponseEntity<Estudo> uploadEstudoComPdf(
-            @RequestParam("title") String title,
-            @RequestParam("description") String description,
-            @RequestParam("author") String author,
-            @RequestParam("date") String date,
-            @RequestParam("category") String category,
-            @RequestParam("pdf") MultipartFile pdfFile) {
+@PostMapping("/upload")
+public ResponseEntity<Estudo> uploadEstudoComPdf(
+        @RequestParam("title") String title,
+        @RequestParam("description") String description,
+        @RequestParam("author") String author,
+        @RequestParam("date") String date,
+        @RequestParam("category") String category,
+        @RequestParam(value = "pdf", required = false) MultipartFile pdfFile,
+        @RequestParam(value = "pdfUrl", required = false) String pdfUrl) {
 
-        try {
-            // Gera um nome único para o arquivo
-String url = cloudinaryService.uploadFile(pdfFile, "estudos");
+    try {
+        Estudo estudo = new Estudo();
+        estudo.setTitle(title);
+        estudo.setDescription(description);
+        estudo.setAuthor(author);
+        estudo.setDate(LocalDate.parse(date));
+        estudo.setCategory(category);
 
-            // Cria o estudo e salva no banco
-Estudo estudo = new Estudo();
-estudo.setTitle(title);
-estudo.setDescription(description);
-estudo.setAuthor(author);
-estudo.setDate(LocalDate.parse(date));
-estudo.setCategory(category);
-estudo.setPdfUrl(url);
-
-            Estudo salvo = estudoService.save(estudo);
-            return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
-
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        if (pdfUrl != null && !pdfUrl.isBlank()) {
+            estudo.setPdfUrl(pdfUrl);
+        } else if (pdfFile != null && !pdfFile.isEmpty()) {
+            String url = cloudinaryService.uploadFile(pdfFile, "estudos");
+            estudo.setPdfUrl(url);
+        } else {
+            return ResponseEntity.badRequest().build(); // nem link nem arquivo enviado
         }
+
+        Estudo salvo = estudoService.save(estudo);
+        return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
+    } catch (IOException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
+}
 }
