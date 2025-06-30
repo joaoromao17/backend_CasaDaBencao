@@ -24,7 +24,7 @@ public SecretKey getSigningKey() {
 
     public String generateToken(Long userId, String email, List<String> roles) {
         return Jwts.builder()
-                .setSubject(email)
+                .setSubject(email.toLowerCase())
                 .claim("userId", userId)
                 .claim("roles", roles)
                 .setIssuedAt(new Date())
