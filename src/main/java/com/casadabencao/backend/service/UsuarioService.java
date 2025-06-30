@@ -60,15 +60,19 @@ public class UsuarioService {
     }
 
 public Usuario save(Usuario usuario) {
-    if (usuarioRepository.existsByEmail(usuario.getEmail())) {
+    // Normaliza email para letras minúsculas
+    String emailNormalizado = usuario.getEmail().toLowerCase();
+
+    if (usuarioRepository.existsByEmail(emailNormalizado)) {
         throw new IllegalArgumentException("Email já cadastrado");
     }
+
+    usuario.setEmail(emailNormalizado);
 
     if (usuario.getPassword() != null && !usuario.getPassword().isEmpty()) {
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
     }
 
-    // Define cargos iniciais com base no campo "member"
     if (usuario.getRoles() == null || usuario.getRoles().isEmpty()) {
         if (Boolean.TRUE.equals(usuario.getMember())) {
             usuario.setRoles(List.of(Role.ROLE_MEMBRO));
@@ -77,13 +81,11 @@ public Usuario save(Usuario usuario) {
         }
     }
 
-    // Valida se for LIDER, precisa de ministérios
     if (usuario.getRoles().contains(Role.ROLE_LIDER) &&
             (usuario.getMinistries() == null || usuario.getMinistries().isEmpty())) {
         throw new IllegalArgumentException("Usuários com cargo de LIDER devem estar associados a pelo menos um ministério.");
     }
 
-    // Vincula ministérios existentes
     if (usuario.getMinistries() != null) {
         List<Ministerio> ministries = usuario.getMinistries().stream()
                 .map(m -> ministerioRepository.findById(m.getId()).orElse(null))
@@ -92,7 +94,6 @@ public Usuario save(Usuario usuario) {
         usuario.setMinistries(ministries);
     }
 
-    // Define imagem de perfil padrão
     if (usuario.getProfileImageUrl() == null || usuario.getProfileImageUrl().isBlank()) {
         usuario.setProfileImageUrl(DEFAULT_PROFILE_IMAGE);
     }
@@ -100,90 +101,61 @@ public Usuario save(Usuario usuario) {
     return usuarioRepository.save(usuario);
 }
 
+public Usuario update(Long id, Usuario updated) {
+    return usuarioRepository.findById(id).map(usuario -> {
 
-    public Usuario update(Long id, Usuario updated) {
-        return usuarioRepository.findById(id).map(usuario -> {
+        if (updated.getName() != null) usuario.setName(updated.getName());
+        if (updated.getPhone() != null) usuario.setPhone(updated.getPhone());
 
-            if (updated.getName() != null) {
-                usuario.setName(updated.getName());
+        if (updated.getEmail() != null) {
+            String novoEmail = updated.getEmail().toLowerCase();
+            Optional<Usuario> outroUsuario = usuarioRepository.findByEmail(novoEmail);
+            if (outroUsuario.isPresent() && !outroUsuario.get().getId().equals(usuario.getId())) {
+                throw new IllegalArgumentException("Este email já está em uso.");
             }
+            usuario.setEmail(novoEmail);
+        }
 
-            if (updated.getPhone() != null) {
-                usuario.setPhone(updated.getPhone());
+        if (updated.getMember() != null) usuario.setMember(updated.getMember());
+        if (updated.getAddress() != null) usuario.setAddress(updated.getAddress());
+        if (updated.getBirthDate() != null) usuario.setBirthDate(updated.getBirthDate());
+        if (updated.getMaritalStatus() != null) usuario.setMaritalStatus(updated.getMaritalStatus());
+        if (updated.getBaptized() != null) usuario.setBaptized(updated.getBaptized());
+        if (updated.getAcceptedTerms() != null) usuario.setAcceptedTerms(updated.getAcceptedTerms());
+        if (updated.getProfileImageUrl() != null) usuario.setProfileImageUrl(updated.getProfileImageUrl());
+
+        if (updated.getPassword() != null && !updated.getPassword().isBlank()) {
+            if (!passwordEncoder.matches(updated.getPassword(), usuario.getPassword())) {
+                usuario.setPassword(passwordEncoder.encode(updated.getPassword()));
             }
+        }
 
-            if (updated.getEmail() != null) {
-                Optional<Usuario> outroUsuario = usuarioRepository.findByEmail(updated.getEmail());
-                if (outroUsuario.isPresent() && !outroUsuario.get().getId().equals(usuario.getId())) {
-                    throw new IllegalArgumentException("Este email já está em uso.");
-                }
-                usuario.setEmail(updated.getEmail());
-            }
+        if (updated.getRoles() != null) usuario.setRoles(updated.getRoles());
 
-            if (updated.getMember() != null) {
-                usuario.setMember(updated.getMember());
-            }
+        if (updated.getMinistries() != null) {
+            List<Ministerio> ministries = updated.getMinistries().stream()
+                    .map(m -> ministerioRepository.findById(m.getId()).orElse(null))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+            usuario.setMinistries(ministries);
+        }
 
-            if (updated.getAddress() != null) {
-                usuario.setAddress(updated.getAddress());
-            }
+        if (updated.getBiography() != null) usuario.setBiography(updated.getBiography());
 
-            if (updated.getBirthDate() != null) {
-                usuario.setBirthDate(updated.getBirthDate());
-            }
-
-            if (updated.getMaritalStatus() != null) {
-                usuario.setMaritalStatus(updated.getMaritalStatus());
-            }
-
-            if (updated.getBaptized() != null) {
-                usuario.setBaptized(updated.getBaptized());
-            }
-
-            if (updated.getAcceptedTerms() != null) {
-                usuario.setAcceptedTerms(updated.getAcceptedTerms());
-            }
-
-            if (updated.getProfileImageUrl() != null) {
-                usuario.setProfileImageUrl(updated.getProfileImageUrl());
-            }
-
-            if (updated.getPassword() != null && !updated.getPassword().isBlank()) {
-                // só atualiza se for diferente da atual
-                if (!passwordEncoder.matches(updated.getPassword(), usuario.getPassword())) {
-                    usuario.setPassword(passwordEncoder.encode(updated.getPassword()));
-                }
-            }
-
-            if (updated.getRoles() != null) {
-                usuario.setRoles(updated.getRoles());
-            }
-
-            if (updated.getMinistries() != null) {
-                List<Ministerio> ministries = updated.getMinistries().stream()
-                        .map(m -> ministerioRepository.findById(m.getId()).orElse(null))
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList());
-                usuario.setMinistries(ministries);
-            }
-
-            if (updated.getBiography() != null) {
-                usuario.setBiography(updated.getBiography());
-            }
-
-            return usuarioRepository.save(usuario);
-        }).orElse(null);
-    }
-
+        return usuarioRepository.save(usuario);
+    }).orElse(null);
+}
 
     public void delete(Long id) {
         usuarioRepository.deleteById(id);
     }
 
-    public Usuario findByEmail(String email) {
-        return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-    }
+public Usuario findByEmail(String email) {
+    // Sempre busca email em minúsculas
+    return usuarioRepository.findByEmail(email.toLowerCase())
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+}
+
 
 
     public void updateProfileImage(MultipartFile file, String email) {
@@ -195,26 +167,27 @@ public Usuario save(Usuario usuario) {
     @Autowired
     private JavaMailSender mailSender;
 
-    public void sendResetToken(String email) {
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+public void sendResetToken(String email) {
+    // Normaliza email antes da busca
+    Usuario usuario = usuarioRepository.findByEmail(email.toLowerCase())
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        String token = UUID.randomUUID().toString();
-        PasswordResetToken resetToken = new PasswordResetToken();
-        resetToken.setToken(token);
-        resetToken.setUsuario(usuario);
-        resetToken.setExpiryDate(LocalDateTime.now().plusHours(24));
-        tokenRepository.save(resetToken);
+    String token = UUID.randomUUID().toString();
+    PasswordResetToken resetToken = new PasswordResetToken();
+    resetToken.setToken(token);
+    resetToken.setUsuario(usuario);
+    resetToken.setExpiryDate(LocalDateTime.now().plusHours(24));
+    tokenRepository.save(resetToken);
 
-        String resetLink = "https://casa-da-ben.vercel.app/reset-password?token=" + token;
+    String resetLink = "https://casa-da-ben.vercel.app/reset-password?token=" + token;
 
-        SimpleMailMessage mail = new SimpleMailMessage();
-        mail.setTo(email);
-        mail.setSubject("Redefinição de Senha");
-        mail.setText("Para redefinir sua senha, clique no link: " + resetLink);
-        mail.setFrom("icbcasadabencao610@gmail.com");
-        mailSender.send(mail);
-    }
+    SimpleMailMessage mail = new SimpleMailMessage();
+    mail.setTo(email);
+    mail.setSubject("Redefinição de Senha");
+    mail.setText("Para redefinir sua senha, clique no link: " + resetLink);
+    mail.setFrom("icbcasadabencao610@gmail.com");
+    mailSender.send(mail);
+}
 
     public void resetPassword(String token, String newPassword) {
         PasswordResetToken resetToken = tokenRepository.findByToken(token)
