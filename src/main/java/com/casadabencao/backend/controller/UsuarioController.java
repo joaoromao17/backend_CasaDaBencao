@@ -86,8 +86,7 @@ private CloudinaryService cloudinaryService;
 public ResponseEntity<?> uploadProfileImage(@RequestParam("file") MultipartFile file, Principal principal) {
     try {
         String email = principal.getName();
-        Usuario usuario = usuarioService.findByEmail(email);
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        Usuario usuario = usuarioService.findByEmail(email); 
 
         if (file.isEmpty() || !file.getContentType().startsWith("image/")) {
             return ResponseEntity.badRequest().body("Arquivo inválido.");
@@ -102,6 +101,7 @@ public ResponseEntity<?> uploadProfileImage(@RequestParam("file") MultipartFile 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao salvar imagem");
     }
 }
+
 
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestBody Usuario updated, Principal principal) {
