@@ -86,7 +86,7 @@ private CloudinaryService cloudinaryService;
 public ResponseEntity<?> uploadProfileImage(@RequestParam("file") MultipartFile file, Principal principal) {
     try {
         String email = principal.getName();
-        Usuario usuario = usuarioRepository.findByEmail(email)
+        Usuario usuario = usuarioService.findByEmail(email);
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
         if (file.isEmpty() || !file.getContentType().startsWith("image/")) {
