@@ -206,7 +206,7 @@ public Usuario save(Usuario usuario) {
         resetToken.setExpiryDate(LocalDateTime.now().plusHours(24));
         tokenRepository.save(resetToken);
 
-        String resetLink = "http://localhost:3000/reset-password?token=" + token;
+        String resetLink = "https://casa-da-ben.vercel.app/reset-password?token=" + token;
 
         SimpleMailMessage mail = new SimpleMailMessage();
         mail.setTo(email);
