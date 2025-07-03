@@ -60,4 +60,8 @@ public class Usuario {
     @Column(columnDefinition = "TEXT")
     private String biography;
 
+    @Column(length = 512)
+private String fcmToken;
+
+
 }
