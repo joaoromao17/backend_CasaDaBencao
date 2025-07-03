@@ -17,7 +17,6 @@ public class WebConfig implements WebMvcConfigurer {
         System.out.println("   - https://casa-da-ben.vercel.app");
         System.out.println("   - capacitor://localhost");
         System.out.println("   - http://localhost");
-        System.out.println("   - https://localhost");
     }
 
     @Override
@@ -48,8 +47,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "http://localhost:3000",
                         "https://casa-da-ben.vercel.app",
                         "capacitor://localhost",
-                        "http://localhost",
-                        "https://localhost"
+                        "http://localhost"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
