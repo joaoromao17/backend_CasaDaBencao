@@ -98,16 +98,22 @@
 		</dependency>
 
 		<dependency>
-   			 <groupId>org.postgresql</groupId>
+   			<groupId>org.postgresql</groupId>
     			<artifactId>postgresql</artifactId>
     			<version>42.7.3</version>
 		</dependency>
 
 		<dependency>
-  <groupId>com.cloudinary</groupId>
-  <artifactId>cloudinary-http44</artifactId>
-  <version>1.37.0</version>
-</dependency>
+  			<groupId>com.cloudinary</groupId>
+  			<artifactId>cloudinary-http44</artifactId>
+  			<version>1.37.0</version>
+		</dependency>
+
+		<dependency>
+  			<groupId>jakarta.annotation</groupId>
+  			<artifactId>jakarta.annotation-api</artifactId>
+  			<version>2.1.1</version>
+		</dependency>
 
 	</dependencies>
 
