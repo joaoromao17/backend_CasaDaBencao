@@ -45,16 +45,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins(
-                        "http://localhost:3000",
-                        "https://casa-da-ben.vercel.app",
-                        "capacitor://localhost",
-                        "http://localhost",
-                        "https://localhost/",
-                        "https://localhost"
-                )
+                .allowedOriginPatterns("*") // Permite todas as origens
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
     }
 }
+
