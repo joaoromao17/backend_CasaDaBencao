@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Firebase service account (NUNCA subir isso para o Git)
+src/main/resources/firebase/icb-610-firebase-adminsdk-fbsvc-99bd49f188.json
