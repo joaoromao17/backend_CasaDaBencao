@@ -241,5 +241,11 @@ public void sendResetToken(String email) {
         return usuarioRepository.findByRoleAndNameContainingIgnoreCase(Role.ROLE_MEMBRO, search.trim(), pageable);
     }
 
+    public void atualizarFcmToken(String token, String email) {
+    Usuario usuario = usuarioRepository.findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
 
+    usuario.setFcmToken(token);
+    usuarioRepository.save(usuario);
+}
 }
