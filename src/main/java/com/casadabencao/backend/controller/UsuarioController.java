@@ -217,4 +217,10 @@ public ResponseEntity<?> uploadProfileImage(@RequestParam("file") MultipartFile 
         usuarioService.delete(usuario.getId());
         return ResponseEntity.ok("Conta excluída com sucesso.");
     }
+
+    @PutMapping("/fcm-token")
+public ResponseEntity<?> atualizarFcmToken(@RequestBody FcmTokenDto dto, @AuthenticationPrincipal UserDetails userDetails) {
+    usuarioService.atualizarFcmToken(dto.getFcmToken(), userDetails.getUsername());
+    return ResponseEntity.ok().build();
+}
 }
