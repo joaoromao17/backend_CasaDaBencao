@@ -5,8 +5,20 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import javax.annotation.PostConstruct;
+
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+
+    @PostConstruct
+    public void logCorsInit() {
+        System.out.println("✅ CORS config carregada com suporte a:");
+        System.out.println("   - http://localhost:3000");
+        System.out.println("   - https://casa-da-ben.vercel.app");
+        System.out.println("   - capacitor://localhost");
+        System.out.println("   - http://localhost");
+        System.out.println("   - https://localhost");
+    }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -29,18 +41,18 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations("file:uploads/avisos/");
     }
 
-@Override
-public void addCorsMappings(CorsRegistry registry) {
-    registry.addMapping("/**")
-            .allowedOrigins(
-                "http://localhost:3000",
-                "https://casa-da-ben.vercel.app",
-                "capacitor://localhost",
-                "http://localhost",
-                "https://localhost" // <-- ADICIONE ESTA LINHA
-            )
-            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-            .allowedHeaders("*")
-            .allowCredentials(true);
-}
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins(
+                        "http://localhost:3000",
+                        "https://casa-da-ben.vercel.app",
+                        "capacitor://localhost",
+                        "http://localhost",
+                        "https://localhost"
+                )
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
+    }
 }
