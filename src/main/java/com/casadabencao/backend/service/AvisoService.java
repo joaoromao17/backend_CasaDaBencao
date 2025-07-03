@@ -1,19 +1,19 @@
 package com.casadabencao.backend.service;
 
-// Service - AvisoService.java
 import com.casadabencao.backend.dto.AvisoDto;
 import com.casadabencao.backend.dto.NovoAvisoDto;
 import com.casadabencao.backend.model.Aviso;
 import com.casadabencao.backend.model.TipoAviso;
+import com.casadabencao.backend.model.Usuario;
 import com.casadabencao.backend.repository.AvisoRepository;
 import com.casadabencao.backend.repository.MinisterioRepository;
 import com.casadabencao.backend.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.io.IOException;
 
 @Service
 public class AvisoService {
@@ -21,11 +21,19 @@ public class AvisoService {
     private final AvisoRepository repository;
     private final MinisterioRepository ministerioRepository;
     private final UsuarioRepository usuarioRepository;
+    private final FirebaseService firebaseService;
 
-    public AvisoService(AvisoRepository repository, MinisterioRepository ministerioRepository, UsuarioRepository usuarioRepository) {
+    @Autowired
+    public AvisoService(
+        AvisoRepository repository,
+        MinisterioRepository ministerioRepository,
+        UsuarioRepository usuarioRepository,
+        FirebaseService firebaseService
+    ) {
         this.repository = repository;
         this.ministerioRepository = ministerioRepository;
         this.usuarioRepository = usuarioRepository;
+        this.firebaseService = firebaseService;
     }
 
     public AvisoDto criar(NovoAvisoDto dto, Long autorId) {
@@ -40,12 +48,26 @@ public class AvisoService {
             if (dto.getMinisterioId() == null) {
                 throw new IllegalArgumentException("MinisterioId obrigatório para avisos ministeriais.");
             }
-            aviso.setMinisterio(ministerioRepository.findById(dto.getMinisterioId()).orElseThrow(() -> new EntityNotFoundException("Ministério não encontrado")));
+            aviso.setMinisterio(ministerioRepository.findById(dto.getMinisterioId())
+                    .orElseThrow(() -> new EntityNotFoundException("Ministério não encontrado")));
         }
 
         aviso.setAutor(usuarioRepository.findById(autorId).orElse(null));
+        aviso = repository.save(aviso);
 
-        return new AvisoDto(repository.save(aviso));
+        List<Usuario> usuarios = usuarioRepository.findAll();
+        for (Usuario usuario : usuarios) {
+            String fcm = usuario.getFcmToken();
+            if (fcm != null && !fcm.isEmpty()) {
+                firebaseService.enviarNotificacao(
+                    aviso.getTitulo(),
+                    aviso.getMensagem(),
+                    fcm
+                );
+            }
+        }
+
+        return new AvisoDto(aviso);
     }
 
     public List<AvisoDto> listarAvisosVisiveis() {
