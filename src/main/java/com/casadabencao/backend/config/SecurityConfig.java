@@ -75,6 +75,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/testemunhos/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/testemunhos/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/users/profile").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/users/fcm-token").authenticated()
+
 
                         // === PERMISSÕES ADMIN (POST, PUT, DELETE) ===
 
