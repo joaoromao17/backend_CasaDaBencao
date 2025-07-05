@@ -59,7 +59,7 @@ public class AvisoService {
             usuariosParaNotificar = usuarioRepository.findByMinistries_Id(dto.getMinisterioId());
     
             // Título personalizado para ministério
-            tituloNotificacao = "📢 Novo aviso do " + aviso.getMinisterio().getName() + "!",
+            tituloNotificacao = "📢 Novo aviso do " + aviso.getMinisterio().getName() + "!";
         } else {
             usuariosParaNotificar = usuarioRepository.findAll();
             tituloNotificacao = "📢 Novo aviso da ICB!";
