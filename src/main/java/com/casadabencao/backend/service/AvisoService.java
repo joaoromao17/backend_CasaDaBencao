@@ -36,39 +36,48 @@ public class AvisoService {
         this.firebaseService = firebaseService;
     }
 
-    public AvisoDto criar(NovoAvisoDto dto, Long autorId) {
-        Aviso aviso = new Aviso();
-        aviso.setTitulo(dto.getTitulo());
-        aviso.setMensagem(dto.getMensagem());
-        aviso.setArquivoUrl(dto.getArquivoUrl());
-        aviso.setDataExpiracao(dto.getDataExpiracao());
-        aviso.setTipo(dto.getTipo());
+public AvisoDto criar(NovoAvisoDto dto, Long autorId) {
+    Aviso aviso = new Aviso();
+    aviso.setTitulo(dto.getTitulo());
+    aviso.setMensagem(dto.getMensagem());
+    aviso.setArquivoUrl(dto.getArquivoUrl());
+    aviso.setDataExpiracao(dto.getDataExpiracao());
+    aviso.setTipo(dto.getTipo());
 
-        if (dto.getTipo() == TipoAviso.MINISTERIAL) {
-            if (dto.getMinisterioId() == null) {
-                throw new IllegalArgumentException("MinisterioId obrigatório para avisos ministeriais.");
-            }
-            aviso.setMinisterio(ministerioRepository.findById(dto.getMinisterioId())
-                    .orElseThrow(() -> new EntityNotFoundException("Ministério não encontrado")));
+    if (dto.getTipo() == TipoAviso.MINISTERIAL) {
+        if (dto.getMinisterioId() == null) {
+            throw new IllegalArgumentException("MinisterioId obrigatório para avisos ministeriais.");
         }
 
-        aviso.setAutor(usuarioRepository.findById(autorId).orElse(null));
-        aviso = repository.save(aviso);
-
-        List<Usuario> usuarios = usuarioRepository.findAll();
-        for (Usuario usuario : usuarios) {
-            String fcm = usuario.getFcmToken();
-            if (fcm != null && !fcm.isEmpty()) {
-                firebaseService.enviarNotificacao(
-                    aviso.getTitulo(),
-                    aviso.getMensagem(),
-                    fcm
-                );
-            }
-        }
-
-        return new AvisoDto(aviso);
+        aviso.setMinisterio(ministerioRepository.findById(dto.getMinisterioId())
+                .orElseThrow(() -> new EntityNotFoundException("Ministério não encontrado")));
     }
+
+    aviso.setAutor(usuarioRepository.findById(autorId).orElse(null));
+    aviso = repository.save(aviso);
+
+    // ✅ Envia notificação
+    List<Usuario> usuariosParaNotificar;
+
+    if (aviso.getTipo() == TipoAviso.MINISTERIAL) {
+        usuariosParaNotificar = usuarioRepository.findByMinisteriosContaining(aviso.getMinisterio());
+    } else {
+        usuariosParaNotificar = usuarioRepository.findAll();
+    }
+
+    for (Usuario usuario : usuariosParaNotificar) {
+        String fcm = usuario.getFcmToken();
+        if (fcm != null && !fcm.isEmpty()) {
+            firebaseService.enviarNotificacao(
+                "📢 Novo aviso da ICB!",
+                aviso.getTitulo(),
+                fcm
+            );
+        }
+    }
+
+    return new AvisoDto(aviso);
+}
 
     public List<AvisoDto> listarAvisosVisiveis() {
         LocalDate hoje = LocalDate.now();
