@@ -18,9 +18,8 @@ public class FirebaseService {
                 .build();
 
         AndroidNotification androidNotification = AndroidNotification.builder()
-                .setIcon("ic_notification") // Nome do ícone sem a extensão .png
-                .setSound("default") // Toque padrão
-                .setColor("#ffffff") // Cor do ícone (opcional)
+                .setIcon("ic_notification")
+                .setSound("default")
                 .build();
 
         AndroidConfig androidConfig = AndroidConfig.builder()
