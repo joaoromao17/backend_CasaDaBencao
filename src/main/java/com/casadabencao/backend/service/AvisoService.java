@@ -44,6 +44,8 @@ public AvisoDto criar(NovoAvisoDto dto, Long autorId) {
     aviso.setDataExpiracao(dto.getDataExpiracao());
     aviso.setTipo(dto.getTipo());
 
+    List<Usuario> usuariosParaNotificar;
+
     if (dto.getTipo() == TipoAviso.MINISTERIAL) {
         if (dto.getMinisterioId() == null) {
             throw new IllegalArgumentException("MinisterioId obrigatório para avisos ministeriais.");
@@ -51,20 +53,17 @@ public AvisoDto criar(NovoAvisoDto dto, Long autorId) {
 
         aviso.setMinisterio(ministerioRepository.findById(dto.getMinisterioId())
                 .orElseThrow(() -> new EntityNotFoundException("Ministério não encontrado")));
+
+        usuariosParaNotificar = usuarioRepository.findByMinistries_Id(dto.getMinisterioId());
+
+    } else {
+        usuariosParaNotificar = usuarioRepository.findAll();
     }
 
     aviso.setAutor(usuarioRepository.findById(autorId).orElse(null));
     aviso = repository.save(aviso);
 
-    // ✅ Envia notificação
-    List<Usuario> usuariosParaNotificar;
-
-    if (aviso.getTipo() == TipoAviso.MINISTERIAL) {
-        usuariosParaNotificar = usuarioRepository.findByMinisteriosContaining(aviso.getMinisterio());
-    } else {
-        usuariosParaNotificar = usuarioRepository.findAll();
-    }
-
+    // 🔔 Enviar notificação
     for (Usuario usuario : usuariosParaNotificar) {
         String fcm = usuario.getFcmToken();
         if (fcm != null && !fcm.isEmpty()) {
