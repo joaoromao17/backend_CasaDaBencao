@@ -5,34 +5,30 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Configuration;
-
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.Base64;
 
 @Configuration
 public class FirebaseConfig {
 
     @PostConstruct
-    public void initializeFirebase() {
-        try {
-            InputStream serviceAccount =
-                getClass().getClassLoader().getResourceAsStream("firebase/firebase-key.json");
+    public void initialize() throws IOException {
+        String base64 = System.getenv("FIREBASE_CREDENTIALS_BASE64");
+        if (base64 == null || base64.isEmpty()) {
+            throw new RuntimeException("⚠️ FIREBASE_CREDENTIALS_BASE64 não encontrada");
+        }
 
-            if (serviceAccount == null) {
-                throw new RuntimeException("Arquivo firebase-key.json não encontrado em resources/firebase");
-            }
+        byte[] decodedBytes = Base64.getDecoder().decode(base64);
+        GoogleCredentials credentials = GoogleCredentials.fromStream(new ByteArrayInputStream(decodedBytes));
 
-            FirebaseOptions options = new FirebaseOptions.Builder()
-                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+        FirebaseOptions options = FirebaseOptions.builder()
+                .setCredentials(credentials)
                 .build();
 
-            if (FirebaseApp.getApps().isEmpty()) {
-                FirebaseApp.initializeApp(options);
-                System.out.println("✅ Firebase inicializado com sucesso");
-            }
-
-        } catch (IOException e) {
-            System.err.println("❌ Erro ao inicializar o Firebase: " + e.getMessage());
+        if (FirebaseApp.getApps().isEmpty()) {
+            FirebaseApp.initializeApp(options);
+            System.out.println("✅ Firebase App inicializado com sucesso via variável de ambiente!");
         }
     }
 }
