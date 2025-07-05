@@ -67,6 +67,8 @@ public class SecurityConfig {
                                 "/api/users/password",
                                 "/api/contribuicoes/*"
                         ).authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/users/fcm-token").authenticated() // 🔐 Protege FCM corretamente
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/profile").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/oracoes/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/oracoes/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/oracoes/**").authenticated()
@@ -74,9 +76,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/testemunhos/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/testemunhos/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/testemunhos/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/users/profile").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/users/fcm-token").authenticated()
-
+                        
+                        // Permitimos apenas se houver endpoints públicos específicos para PUT (ex: atualização de info pública)
+                        .requestMatchers(HttpMethod.PUT, "/api/users/public/**").permitAll()
 
                         // === PERMISSÕES ADMIN (POST, PUT, DELETE) ===
 
