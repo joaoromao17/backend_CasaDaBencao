@@ -221,8 +221,15 @@ public ResponseEntity<?> uploadProfileImage(@RequestParam("file") MultipartFile 
     }
 
     @PutMapping("/fcm-token")
-public ResponseEntity<?> atualizarFcmToken(@RequestBody FcmTokenDto dto, @AuthenticationPrincipal UserDetails userDetails) {
-    usuarioService.atualizarFcmToken(dto.getFcmToken(), userDetails.getUsername());
-    return ResponseEntity.ok().build();
-}
+    public ResponseEntity<?> atualizarFcmToken(
+        @RequestBody FcmTokenDto dto,
+        Principal principal
+    ) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário não autenticado");
+        }
+    
+        usuarioService.atualizarFcmToken(dto.getFcmToken(), principal.getName());
+        return ResponseEntity.ok().build();
+    }
 }
