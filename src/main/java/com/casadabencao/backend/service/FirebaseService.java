@@ -18,11 +18,13 @@ public class FirebaseService {
                 .build();
 
         AndroidNotification androidNotification = AndroidNotification.builder()
-                .setIcon("ic_notification")
-                .setSound("default")
+                .setIcon("ic_notification") // nome da imagem na pasta res/drawable
+                .setSound("default") // som padrão
+                .setPriority(AndroidNotification.Priority.HIGH) // prioridade máxima
                 .build();
 
         AndroidConfig androidConfig = AndroidConfig.builder()
+                .setPriority(AndroidConfig.Priority.HIGH) // notificação de alta prioridade
                 .setNotification(androidNotification)
                 .build();
 
