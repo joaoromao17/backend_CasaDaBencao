@@ -2,6 +2,7 @@ package com.casadabencao.backend.service;
 
 import com.casadabencao.backend.model.Contribuicao;
 import com.casadabencao.backend.repository.ContribuicaoRepository;
+import com.casadabencao.backend.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -20,6 +21,12 @@ public class ContribuicaoService {
     @Autowired
     private ContribuicaoRepository repository;
 
+    @Autowired
+    private FirebaseService firebaseService;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
     public List<Contribuicao> findAll() {
         return repository.findAll();
     }
@@ -29,7 +36,22 @@ public class ContribuicaoService {
     }
 
     public Contribuicao save(Contribuicao contrib) {
-        return repository.save(contrib);
+        Contribuicao salva = repository.save(contrib);
+
+        // 🔔 Enviar notificação para todos com token FCM
+        usuarioRepository.findAll().forEach(usuario -> {
+            String fcm = usuario.getFcmToken();
+            if (fcm != null && !fcm.isBlank()) {
+                firebaseService.enviarNotificacaoComLink(
+                        "💖 Nova caixinha de contribuição!",
+                        "Apoie: " + salva.getTitle(),
+                        fcm,
+                        "https://localhost/contribuicoes/" + salva.getId()
+                );
+            }
+        });
+
+        return salva;
     }
 
     public void deleteById(Long id) {
