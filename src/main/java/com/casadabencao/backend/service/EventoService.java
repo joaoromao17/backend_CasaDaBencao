@@ -3,6 +3,7 @@ package com.casadabencao.backend.service;
 import com.casadabencao.backend.dto.EventoDto;
 import com.casadabencao.backend.model.Evento;
 import com.casadabencao.backend.repository.EventoRepository;
+import com.casadabencao.backend.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +26,13 @@ public class EventoService {
 
     @Autowired
     private CloudinaryService cloudinaryService;
+
+    @Autowired
+    private FirebaseService firebaseService;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
 
     public List<Evento> findAll() {
         return eventoRepository.findAll();
@@ -53,7 +61,21 @@ public class EventoService {
             evento.setImageUrl(imageUrl);
         }
 
-        return eventoRepository.save(evento);
+        evento = eventoRepository.save(evento);
+
+        // 🔔 Enviar notificação para todos os usuários com FCM
+        String tituloNotificacao = "📅 Novo evento da ICB! NÃO PERCA!";
+        String corpoNotificacao = evento.getTitle();
+        String link = "https://localhost/eventos/" + evento.getId();
+
+        usuarioRepository.findAll().forEach(usuario -> {
+            String token = usuario.getFcmToken();
+            if (token != null && !token.isBlank()) {
+                firebaseService.enviarNotificacaoComLink(tituloNotificacao, corpoNotificacao, token, link);
+            }
+        });
+
+        return evento;
     }
 
     public Evento updateFromDto(Long id, EventoDto dto, MultipartFile image) throws IOException {

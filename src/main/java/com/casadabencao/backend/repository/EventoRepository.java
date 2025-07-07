@@ -9,4 +9,5 @@ import java.util.List;
 
 public interface EventoRepository extends JpaRepository<Evento, Long> {
     List<Evento> findByDateGreaterThanEqualOrderByDateAsc(LocalDate date);
+    List<Evento> findByDate(LocalDate date);
 }
