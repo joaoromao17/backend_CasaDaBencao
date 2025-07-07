@@ -1,6 +1,8 @@
 package com.casadabencao.backend.service;
 
+import com.casadabencao.backend.model.Usuario;
 import com.casadabencao.backend.model.Versiculo;
+import com.casadabencao.backend.repository.UsuarioRepository;
 import com.casadabencao.backend.repository.VersiculoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,12 @@ import java.io.IOException;
 
 @Service
 public class VersiculoService {
+
+    @Autowired
+    private FirebaseService firebaseService;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     private final VersiculoRepository versiculoRepository;
     private Versiculo versiculoDoDia;
@@ -26,7 +34,6 @@ public class VersiculoService {
     public Versiculo getVersiculoDoDia() {
         LocalDate hoje = LocalDate.now();
 
-        // Se for um novo dia ou ainda não foi carregado
         if (dataUltimaAtualizacao == null || !hoje.equals(dataUltimaAtualizacao)) {
             List<Versiculo> todos = versiculoRepository.findAll();
             if (todos.isEmpty()) {
@@ -35,7 +42,25 @@ public class VersiculoService {
 
             versiculoDoDia = todos.get(new Random().nextInt(todos.size()));
             dataUltimaAtualizacao = hoje;
+
+            // 🔔 Enviar notificação para todos os usuários com FCM
+            String mensagem = "\"" + versiculoDoDia.getVerse() + "\" — " + versiculoDoDia.getReference();
+
+            List<Usuario> usuarios = usuarioRepository.findAll();
+            for (Usuario usuario : usuarios) {
+                String fcm = usuario.getFcmToken();
+                if (fcm != null && !fcm.isBlank()) {
+                    firebaseService.enviarNotificacaoComLink(
+                            "📖 Versículo do dia!",
+                            mensagem,
+                            fcm,
+                            "https://localhost"
+                    );
+                }
+            }
         }
+
         return versiculoDoDia;
     }
+
 }
