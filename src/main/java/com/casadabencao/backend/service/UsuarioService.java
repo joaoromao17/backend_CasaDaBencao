@@ -40,6 +40,9 @@ public class UsuarioService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private FirebaseService firebaseService;
+
     public boolean checkPassword(String rawPassword, Usuario usuario) {
         return passwordEncoder.matches(rawPassword, usuario.getPassword());
     }
@@ -60,47 +63,63 @@ public class UsuarioService {
         return usuarioRepository.findById(id);
     }
 
-public Usuario save(Usuario usuario) {
-    // Normaliza email para letras minúsculas
-    String emailNormalizado = usuario.getEmail().toLowerCase();
+    public Usuario save(Usuario usuario) {
+        // Normaliza email
+        String emailNormalizado = usuario.getEmail().toLowerCase();
 
-    if (usuarioRepository.existsByEmail(emailNormalizado)) {
-        throw new IllegalArgumentException("Email já cadastrado");
-    }
-
-    usuario.setEmail(emailNormalizado);
-
-    if (usuario.getPassword() != null && !usuario.getPassword().isEmpty()) {
-        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
-    }
-
-    if (usuario.getRoles() == null || usuario.getRoles().isEmpty()) {
-        if (Boolean.TRUE.equals(usuario.getMember())) {
-            usuario.setRoles(List.of(Role.ROLE_MEMBRO));
-        } else {
-            usuario.setRoles(List.of(Role.ROLE_VISITANTE));
+        if (usuarioRepository.existsByEmail(emailNormalizado)) {
+            throw new IllegalArgumentException("Email já cadastrado");
         }
-    }
 
-    if (usuario.getRoles().contains(Role.ROLE_LIDER) &&
-            (usuario.getMinistries() == null || usuario.getMinistries().isEmpty())) {
-        throw new IllegalArgumentException("Usuários com cargo de LIDER devem estar associados a pelo menos um ministério.");
-    }
+        usuario.setEmail(emailNormalizado);
 
-    if (usuario.getMinistries() != null) {
-        List<Ministerio> ministries = usuario.getMinistries().stream()
-                .map(m -> ministerioRepository.findById(m.getId()).orElse(null))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        usuario.setMinistries(ministries);
-    }
+        if (usuario.getPassword() != null && !usuario.getPassword().isEmpty()) {
+            usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+        }
 
-    if (usuario.getProfileImageUrl() == null || usuario.getProfileImageUrl().isBlank()) {
-        usuario.setProfileImageUrl(DEFAULT_PROFILE_IMAGE);
-    }
+        if (usuario.getRoles() == null || usuario.getRoles().isEmpty()) {
+            if (Boolean.TRUE.equals(usuario.getMember())) {
+                usuario.setRoles(List.of(Role.ROLE_MEMBRO));
+            } else {
+                usuario.setRoles(List.of(Role.ROLE_VISITANTE));
+            }
+        }
 
-    return usuarioRepository.save(usuario);
-}
+        if (usuario.getRoles().contains(Role.ROLE_LIDER) &&
+                (usuario.getMinistries() == null || usuario.getMinistries().isEmpty())) {
+            throw new IllegalArgumentException("Usuários com cargo de LIDER devem estar associados a pelo menos um ministério.");
+        }
+
+        if (usuario.getMinistries() != null) {
+            List<Ministerio> ministries = usuario.getMinistries().stream()
+                    .map(m -> ministerioRepository.findById(m.getId()).orElse(null))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+            usuario.setMinistries(ministries);
+        }
+
+        if (usuario.getProfileImageUrl() == null || usuario.getProfileImageUrl().isBlank()) {
+            usuario.setProfileImageUrl(DEFAULT_PROFILE_IMAGE);
+        }
+
+        Usuario saved = usuarioRepository.save(usuario);
+
+        // 🔔 Notificar admins com FCM
+        List<Usuario> admins = usuarioRepository.findByRolesContaining(Role.ROLE_ADMIN);
+        for (Usuario admin : admins) {
+            String fcm = admin.getFcmToken();
+            if (fcm != null && !fcm.isBlank()) {
+                firebaseService.enviarNotificacaoComLink(
+                        "🆕 Novo usuário na área!",
+                        saved.getName(),
+                        fcm,
+                        "https://localhost/usuarios"
+                );
+            }
+        }
+
+        return saved;
+    }
 
 public Usuario update(Long id, Usuario updated) {
     return usuarioRepository.findById(id).map(usuario -> {
