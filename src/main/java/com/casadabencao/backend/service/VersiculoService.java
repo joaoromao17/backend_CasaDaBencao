@@ -5,12 +5,12 @@ import com.casadabencao.backend.model.Versiculo;
 import com.casadabencao.backend.repository.UsuarioRepository;
 import com.casadabencao.backend.repository.VersiculoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Random;
-import java.io.IOException;
 
 @Service
 public class VersiculoService {
@@ -32,19 +32,26 @@ public class VersiculoService {
     }
 
     public Versiculo getVersiculoDoDia() {
+        return versiculoDoDia;
+    }
+
+    // 🕗 Agendado para rodar todos os dias às 08:00 da manhã
+    @Scheduled(cron = "0 0 8 * * *") // formato: segundo, minuto, hora, dia, mês, dia-da-semana
+    public void atualizarVersiculoDoDia() {
         LocalDate hoje = LocalDate.now();
 
         if (dataUltimaAtualizacao == null || !hoje.equals(dataUltimaAtualizacao)) {
             List<Versiculo> todos = versiculoRepository.findAll();
             if (todos.isEmpty()) {
-                throw new RuntimeException("Nenhum versículo disponível no banco de dados.");
+                System.out.println("⚠️ Nenhum versículo disponível no banco.");
+                return;
             }
 
             versiculoDoDia = todos.get(new Random().nextInt(todos.size()));
             dataUltimaAtualizacao = hoje;
 
-            // 🔔 Enviar notificação para todos os usuários com FCM
             String mensagem = "\"" + versiculoDoDia.getVerse() + "\" — " + versiculoDoDia.getReference();
+            System.out.println("📖 Novo versículo do dia definido: " + mensagem);
 
             List<Usuario> usuarios = usuarioRepository.findAll();
             for (Usuario usuario : usuarios) {
@@ -59,8 +66,5 @@ public class VersiculoService {
                 }
             }
         }
-
-        return versiculoDoDia;
     }
-
 }
