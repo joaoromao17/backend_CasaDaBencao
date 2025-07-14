@@ -32,8 +32,20 @@ public class VersiculoService {
     }
 
     public Versiculo getVersiculoDoDia() {
+        if (versiculoDoDia == null) {
+            // fallback para não quebrar o frontend se for a primeira execução do backend
+            List<Versiculo> todos = versiculoRepository.findAll();
+            if (todos.isEmpty()) {
+                throw new RuntimeException("Nenhum versículo disponível no banco de dados.");
+            }
+            versiculoDoDia = todos.get(new Random().nextInt(todos.size()));
+            dataUltimaAtualizacao = LocalDate.now(); // evita reprocessamento antes do próximo agendamento
+            System.out.println("⚠️ Versículo do dia gerado em fallback: " + versiculoDoDia.getVerse());
+        }
+
         return versiculoDoDia;
     }
+
 
     // 🕗 Agendado para rodar todos os dias às 08:00 da manhã
     @Scheduled(cron = "0 0 8 * * *") // formato: segundo, minuto, hora, dia, mês, dia-da-semana
