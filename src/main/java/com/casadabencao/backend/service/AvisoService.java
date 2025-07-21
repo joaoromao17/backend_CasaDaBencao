@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.casadabencao.backend.util.HtmlSanitizer;
 
 @Service
 public class AvisoService {
@@ -39,7 +40,7 @@ public class AvisoService {
     public AvisoDto criar(NovoAvisoDto dto, Long autorId) {
         Aviso aviso = new Aviso();
         aviso.setTitulo(dto.getTitulo());
-        aviso.setMensagem(dto.getMensagem());
+        aviso.setMensagem(HtmlSanitizer.sanitize(dto.getMensagem()));
         aviso.setArquivoUrl(dto.getArquivoUrl());
         aviso.setDataExpiracao(dto.getDataExpiracao());
         aviso.setTipo(dto.getTipo());
