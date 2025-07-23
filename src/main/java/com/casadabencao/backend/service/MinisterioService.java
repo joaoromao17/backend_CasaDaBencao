@@ -27,6 +27,9 @@ public class MinisterioService {
     @Autowired
     private StorageService storageService;
 
+    @Autowired
+    private CloudinaryService cloudinaryService;
+
 
     public List<Ministerio> findAll() {
         return ministerioRepository.findAll();
@@ -131,9 +134,13 @@ public class MinisterioService {
             ministerio.setAtividades(dto.getActivities());
         }
 
-        if (image != null && !image.isEmpty()) {
-            String imageUrl = storageService.saveImage(image, "ministerios");
-            ministerio.setImageUrl(imageUrl);
+        if (image != null && !image.isEmpty() && image.getContentType().startsWith("image/")) {
+            try {
+                String imageUrl = cloudinaryService.uploadFile(image, "ministerios");
+                ministerio.setImageUrl(imageUrl);
+            } catch (IOException e) {
+                throw new RuntimeException("Erro ao fazer upload da imagem no Cloudinary", e);
+            }
         }
 
         return ministerioRepository.save(ministerio);
