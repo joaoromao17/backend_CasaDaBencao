@@ -1,6 +1,7 @@
 package com.casadabencao.backend.config;
 
 import com.casadabencao.backend.security.JwtAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -32,6 +33,11 @@ public class SecurityConfig {
         http
                 .cors(withDefaults())
                 .csrf(csrf -> csrf.disable())
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token inválido ou expirado");
+                        })
+                )
                 .authorizeHttpRequests(auth -> auth
 
                         // === ROTAS PÚBLICAS ===
