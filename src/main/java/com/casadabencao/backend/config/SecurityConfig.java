@@ -1,7 +1,6 @@
 package com.casadabencao.backend.config;
 
 import com.casadabencao.backend.security.JwtAuthenticationFilter;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -28,17 +27,11 @@ public class SecurityConfig {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(withDefaults())
                 .csrf(csrf -> csrf.disable())
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token inválido ou expirado");
-                        })
-                )
                 .authorizeHttpRequests(auth -> auth
 
                         // === ROTAS PÚBLICAS ===
@@ -83,7 +76,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/testemunhos/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/testemunhos/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/testemunhos/**").authenticated()
-                        
+
                         // Permitimos apenas se houver endpoints públicos específicos para PUT (ex: atualização de info pública)
                         .requestMatchers(HttpMethod.PUT, "/api/users/public/**").permitAll()
 
